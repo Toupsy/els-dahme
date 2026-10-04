@@ -1,0 +1,23 @@
+.boat-card {
+  display: grid;
+  gap: 12px;
+}
+.boat-card.out {
+  opacity: 0.75;
+}
+.boat-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.boat-head h2 {
+  margin: 0;
+}
+.boat-admin summary {
+  cursor: pointer;
+  color: var(--dim);
+  min-height: 32px;
+}
+.boat-admin .row {
+  margin-top: 8px;
+}

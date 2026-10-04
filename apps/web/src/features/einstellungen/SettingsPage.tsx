@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatClock } from "@els/domain";
 import { useLedger, useRuntime } from "../../core/runtime";
+import { MapSettings } from "./MapSettings";
 
 export function SettingsPage() {
   const runtime = useRuntime();
@@ -9,6 +10,7 @@ export function SettingsPage() {
 
   return (
     <div className="stack">
+      <MapSettings />
       {rejected.length > 0 && (
         <section className="card">
           <h2>Abgewiesene Aktionen</h2>

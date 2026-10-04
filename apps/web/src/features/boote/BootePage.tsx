@@ -1,21 +1,46 @@
 import "./boote.css";
-import { BOAT_IDS, COAST_ORDER, STATIONS, boatStatuses, type BoatStatus, type StationId } from "@els/domain";
-import { useDispatch, useLedger } from "../../core/runtime";
+import {
+  BOAT_IDS,
+  COAST_ORDER,
+  STATIONS,
+  boatStatuses,
+  logbookDay,
+  watchDate,
+  type BoatStatus,
+  type StationId,
+} from "@els/domain";
+import { DayBar } from "../../components/DayBar";
+import { go } from "../../core/route";
+import { useDispatch, useLedger, useNow, useRuntime } from "../../core/runtime";
 import { BoatActions } from "./BoatActions";
+import { BoatLog } from "./BoatLog";
+import { LogSheet } from "./LogSheet";
 
-export function BootePage() {
+/** #/boote, #/boote/<tag>, #/boote/blatt/<boot>/<tag> */
+export function BootePage({ rest }: { rest: string[] }) {
+  const runtime = useRuntime();
+  if (rest[0] === "blatt") return <LogSheet boat={rest[1] ?? ""} date={rest[2] ?? ""} />;
+  const date = rest[0] && /^\d{4}-\d{2}-\d{2}$/.test(rest[0]) ? rest[0] : watchDate(runtime.now());
+  return <BoatList date={date} />;
+}
+
+function BoatList({ date }: { date: string }) {
   const { state } = useLedger();
   const boats = boatStatuses(state);
   return (
     <div className="stack">
+      <DayBar date={date} onChange={(d) => go("boote", d)} />
       {BOAT_IDS.map((id) => (
-        <BoatCard key={id} boat={boats[id]} />
+        <BoatCard key={id} boat={boats[id]} date={date} />
       ))}
     </div>
   );
 }
 
-function BoatCard({ boat }: { boat: BoatStatus }) {
+function BoatCard({ boat, date }: { boat: BoatStatus; date: string }) {
+  const { state } = useLedger();
+  const now = useNow(15_000);
+  const log = logbookDay(state, boat.id, date, now);
   return (
     <section className={boat.inService ? "card boat-card" : "card boat-card out"} data-testid={`boat-${boat.id}`}>
       <header className="boat-head">
@@ -23,6 +48,7 @@ function BoatCard({ boat }: { boat: BoatStatus }) {
         <span className="hint">Liegeplatz {STATIONS[boat.station].label}</span>
       </header>
       <BoatActions boat={boat} />
+      <BoatLog log={log} />
       <BoatAdmin boat={boat} />
     </section>
   );

@@ -9,7 +9,7 @@ import { SettingsPage } from "../einstellungen/SettingsPage";
 
 const PAGES: Record<TabId, (props: { rest: string[] }) => ReactNode> = {
   lage: () => <LagePage />,
-  boote: () => <BootePage />,
+  boote: ({ rest }) => <BootePage rest={rest} />,
   einsaetze: () => <Placeholder />,
   funk: () => <FunkPage />,
   personal: () => <Placeholder />,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formatClock } from "@els/domain";
+import { formatClock, formatDate, watchDate } from "@els/domain";
 import { useLedger, useRuntime } from "../../core/runtime";
 import { MapSettings } from "./MapSettings";
 
@@ -56,6 +56,13 @@ export function SettingsPage() {
       {runtime.logout && (
         <section className="card">
           <h2>Sitzung</h2>
+          {runtime.sessionExpiresAt?.() && (
+            <p className="hint">
+              Angemeldet bis {formatDate(watchDate(runtime.sessionExpiresAt()!))},{" "}
+              {formatClock(runtime.sessionExpiresAt()!)} Uhr. Danach ist eine erneute Anmeldung nötig, sobald Netz da
+              ist; offline geht die Arbeit weiter.
+            </p>
+          )}
           <button className="btn big" onClick={() => void runtime.logout?.()}>
             Abmelden
           </button>

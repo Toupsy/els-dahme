@@ -15,7 +15,8 @@ const DB_NAME = "els";
 export const bootstrap: Bootstrap = async () => {
   const ledger = await Ledger.open(DB_NAME, serverNow);
   const sync = createSync(ledger);
-  const hadSession = (await ledger.getMeta<string>("sessionExpiresAt")) !== undefined;
+  let sessionExpiresAt = await ledger.getMeta<string>("sessionExpiresAt");
+  const hadSession = sessionExpiresAt !== undefined;
   if (!hadSession) sync.requireLogin();
 
   const runtime: Runtime = {
@@ -25,9 +26,11 @@ export const bootstrap: Bootstrap = async () => {
     status: sync.status,
     subscribeStatus: sync.subscribe,
     kick: sync.kick,
+    sessionExpiresAt: () => sessionExpiresAt,
     async logout() {
       await api("/api/logout", {}).catch(() => undefined);
       await ledger.setMeta("sessionExpiresAt", undefined);
+      sessionExpiresAt = undefined;
       sync.requireLogin();
     },
   };
@@ -35,6 +38,7 @@ export const bootstrap: Bootstrap = async () => {
   async function login(passcode: string) {
     const info = sessionInfoSchema.parse(await api("/api/login", { passcode }));
     await ledger.setMeta("sessionExpiresAt", info.expiresAt);
+    sessionExpiresAt = info.expiresAt;
     sync.resume();
   }
 

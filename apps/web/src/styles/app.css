@@ -152,6 +152,12 @@ h3 {
   opacity: 0.45;
   cursor: default;
 }
+.btn.ghost {
+  border-color: transparent;
+  background: none;
+  color: var(--accent);
+  font-weight: 500;
+}
 .btn.big {
   min-height: var(--tap);
   padding: 0 20px;

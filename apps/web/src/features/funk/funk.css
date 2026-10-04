@@ -1,16 +1,40 @@
 .radio-form {
   display: grid;
-  grid-template-columns: 110px 110px 1fr auto;
+  gap: 10px;
+}
+.radio-form .quick {
+  font-size: 1.05rem;
+}
+.quick-preview {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+.radio-fields {
+  display: grid;
+  grid-template-columns: 110px 110px 110px 1fr auto;
   gap: 8px;
 }
-@media (max-width: 700px) {
-  .radio-form {
-    grid-template-columns: 1fr 1fr;
+@media (max-width: 760px) {
+  .radio-fields {
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
-.radio-form .error {
-  grid-column: 1 / -1;
-  margin: 0;
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 .radio-list {
   list-style: none;
@@ -25,11 +49,25 @@
   grid-template-columns: 60px 150px 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-bottom: 1px solid var(--line);
 }
 .radio-list li:last-child {
   border-bottom: 0;
+}
+.radio-list li.auto .text {
+  color: var(--dim);
+}
+.radio-list li.editing {
+  grid-template-columns: 110px 220px 1fr auto;
+  background: var(--bg);
+}
+.radio-list li.editing .calls {
+  display: flex;
+  gap: 4px;
+}
+.radio-list li.editing .calls input {
+  width: 100px;
 }
 .radio-list .time {
   font-variant-numeric: tabular-nums;
@@ -37,4 +75,16 @@
 }
 .radio-list .calls {
   color: var(--dim);
+}
+.radio-list .text {
+  display: grid;
+}
+.corrected {
+  color: var(--warn);
+}
+@media (max-width: 760px) {
+  .radio-list li,
+  .radio-list li.editing {
+    grid-template-columns: 50px 1fr;
+  }
 }

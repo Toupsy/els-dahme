@@ -99,6 +99,15 @@ describe("Passcode-Zugang", () => {
     expect((await app.inject({ method: "GET", url: "/api/session", cookies })).statusCode).toBe(401);
   });
 
+  it("ein neuer Passcode macht alte Sitzungen ungültig", async () => {
+    const db = openDatabase(":memory:");
+    const first = await setup({}, db);
+    const cookies = cookieOf(await login(first.app));
+    await first.app.close();
+    const second = await setup({ PASSCODE_HASH: hashPasscode("neuer-passcode-123", 1024) }, db);
+    expect((await second.app.inject({ method: "GET", url: "/api/session", cookies })).statusCode).toBe(401);
+  });
+
   it("weist schreibende Anfragen fremder Herkunft ab", async () => {
     const { app } = await setup();
     const response = await app.inject({

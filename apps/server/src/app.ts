@@ -35,7 +35,7 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
   const app = Fastify({
     logger: config.LOG_LEVEL === "silent" ? false : { level: config.LOG_LEVEL },
     trustProxy: config.TRUST_PROXY,
-    bodyLimit: 2 * 1024 * 1024,
+    bodyLimit: 4 * 1024 * 1024,
   });
   const ledger = createLedger(db, (message) => app.log.warn(message));
 

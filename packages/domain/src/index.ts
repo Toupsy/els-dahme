@@ -12,3 +12,4 @@ export * from "./boats";
 export * from "./towers";
 export * from "./geo";
 export * from "./logbook";
+export * from "./incidents";

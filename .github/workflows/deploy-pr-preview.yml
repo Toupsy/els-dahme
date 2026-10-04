@@ -46,6 +46,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - if: steps.cf.outputs.ok == 'true'
         run: pnpm build:preview
+      - name: Wrangler-Installation im Workspace erlauben
+        if: steps.cf.outputs.ok == 'true'
+        run: pnpm config set ignore-workspace-root-check true --location project
       - name: PR-Worker veröffentlichen
         id: deploy
         if: steps.cf.outputs.ok == 'true'

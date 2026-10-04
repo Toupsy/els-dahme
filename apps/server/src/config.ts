@@ -9,11 +9,24 @@ const envSchema = z
     SESSION_SECRET: z.string().min(32, "SESSION_SECRET fehlt oder ist kürzer als 32 Zeichen"),
     PASSCODE_HASH: z
       .string()
-      .regex(/^scrypt:\d+:\d+:\d+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+$/, "PASSCODE_HASH fehlt oder hat ein falsches Format (pnpm hash-passcode)"),
+      .regex(
+        /^scrypt:\d+:\d+:\d+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+$/,
+        "PASSCODE_HASH fehlt oder hat ein falsches Format (pnpm hash-passcode)",
+      ),
     PUBLIC_ORIGIN: z.url(),
-    SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(24 * 30).default(24),
+    SESSION_TTL_HOURS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(24 * 30)
+      .default(24),
     LOGIN_MAX_FAILURES: z.coerce.number().int().min(1).max(100).default(5),
-    LOGIN_WINDOW_MINUTES: z.coerce.number().int().min(1).max(24 * 60).default(15),
+    LOGIN_WINDOW_MINUTES: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(24 * 60)
+      .default(15),
     TRUST_PROXY: z
       .enum(["true", "false"])
       .default("false")

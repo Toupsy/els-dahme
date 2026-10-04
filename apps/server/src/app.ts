@@ -89,7 +89,12 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
         if (error instanceof DomainError) result.failed.push({ index, id, code: error.code, message: error.message });
         else {
           request.log.error({ err: error }, "Aktion nicht gespeichert");
-          result.failed.push({ index, id, code: "SERVER_ERROR", message: "Aktion nicht gespeichert. Wird erneut gesendet." });
+          result.failed.push({
+            index,
+            id,
+            code: "SERVER_ERROR",
+            message: "Aktion nicht gespeichert. Wird erneut gesendet.",
+          });
         }
       }
     }
@@ -103,7 +108,7 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
       wildcard: false,
       setHeaders: (res, path) => {
         if (path.endsWith("sw.js") || path.endsWith(".html") || path.endsWith(".webmanifest"))
-          res.setHeader("Cache-Control", "no-cache");
+          res.header("Cache-Control", "no-cache");
       },
     });
     app.setNotFoundHandler((request, reply) => {

@@ -48,7 +48,8 @@ export function registerAuth(app: FastifyInstance, config: Config, db: Db, now: 
   app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
     const path = request.url.split("?")[0] ?? "";
     if (!path.startsWith("/api/") || path === "/api/login") return;
-    if (!currentSession(request)) return reply.code(401).header("Cache-Control", "no-store").send({ message: "Anmeldung erforderlich." });
+    if (!currentSession(request))
+      return reply.code(401).header("Cache-Control", "no-store").send({ message: "Anmeldung erforderlich." });
   });
 
   app.post("/api/login", async (request, reply) => {
@@ -59,7 +60,10 @@ export function registerAuth(app: FastifyInstance, config: Config, db: Db, now: 
     const inWindow = record && t - record.window_start < windowMs;
     if (inWindow && record.failures >= config.LOGIN_MAX_FAILURES) {
       const retry = Math.ceil((record.window_start + windowMs - t) / 1000);
-      return reply.code(429).header("Retry-After", String(retry)).send({ message: "Zu viele Fehlversuche. Bitte später erneut versuchen." });
+      return reply
+        .code(429)
+        .header("Retry-After", String(retry))
+        .send({ message: "Zu viele Fehlversuche. Bitte später erneut versuchen." });
     }
     const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success || !verifyPasscode(parsed.data.passcode, config.PASSCODE_HASH)) {

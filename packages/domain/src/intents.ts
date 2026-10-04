@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { isUtcTimestamp } from "./time";
 
-export const utcTimestampSchema = z
-  .string()
-  .refine(isUtcTimestamp, "Zeitstempel muss UTC im ISO-Format sein.");
+export const utcTimestampSchema = z.string().refine(isUtcTimestamp, "Zeitstempel muss UTC im ISO-Format sein.");
 
 const callSign = z.string().trim().min(1).max(40);
 const radioText = z.string().trim().min(1).max(500);
@@ -37,11 +35,7 @@ export const settingsIntent = intent(
   z.object({ mapBearing: z.number().int().min(0).max(359) }).partial(),
 );
 
-export const intentSchema = z.discriminatedUnion("type", [
-  radioAppendIntent,
-  radioCorrectIntent,
-  settingsIntent,
-]);
+export const intentSchema = z.discriminatedUnion("type", [radioAppendIntent, radioCorrectIntent, settingsIntent]);
 
 export type Intent = z.infer<typeof intentSchema>;
 export type IntentType = Intent["type"];

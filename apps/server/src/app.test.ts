@@ -44,7 +44,7 @@ async function login(app: Awaited<ReturnType<typeof setup>>["app"], passcode = P
   return app.inject({ method: "POST", url: "/api/login", payload: { passcode } });
 }
 
-function cookieOf(response: { cookies: { name: string; value: string }[] }) {
+function cookieOf(response: { cookies: { name: string; value: string }[] }): Record<string, string> {
   const c = response.cookies.find((x) => x.name === "els_session");
   return c ? { els_session: c.value } : {};
 }
@@ -125,7 +125,12 @@ describe("Sync", () => {
     const cookies = cookieOf(await login(app));
     const first = radioIntent("Funk-Anmeldung");
     const second = radioIntent("Turm aufgerödelt");
-    const push = await app.inject({ method: "POST", url: "/api/sync/push", cookies, payload: { intents: [first, second] } });
+    const push = await app.inject({
+      method: "POST",
+      url: "/api/sync/push",
+      cookies,
+      payload: { intents: [first, second] },
+    });
     expect(push.json().acknowledged.map((a: { seq: number }) => a.seq)).toEqual([1, 2]);
 
     const again = await app.inject({ method: "POST", url: "/api/sync/push", cookies, payload: { intents: [first] } });

@@ -21,7 +21,7 @@ Caddy holt das HTTPS-Zertifikat automatisch. Betrieb, Passcode-Wechsel und Siche
 
 ## Bedienung in Kürze
 
-- **Lage:** Turm, Boot oder Einsatz antippen; rechts erscheinen die passenden Knöpfe. „Einsatz anlegen“ und dann den Ort antippen (oder lange auf die Karte drücken). „Norden oben“ schaltet die Ausrichtung um; Standard ist Seeseite oben.
+- **Lage:** Turm, Boot oder Einsatz antippen; die passenden Knöpfe öffnen sich als Popup über der Karte. Unter der Karte stehen das Funktagebuch des Tages (mit Eingabe) und daneben ein Notizblock, der nur auf dem jeweiligen Gerät gespeichert wird. Die Trennlinie lässt sich ziehen; Doppelklick setzt die Höhe zurück. „Einsatz anlegen“ und dann den Ort antippen (oder lange auf die Karte drücken). „Norden oben“ schaltet die Ausrichtung um; Standard ist Seeseite oben.
 - **Türme:** Aufrödeln und Abrödeln mit einem Tipp, Flagge setzen. Beim Abrödeln wird die Flagge eingeholt.
 - **Boote:** „Motor läuft, <Zweck>“ bzw. „Motor aus“. Jede Änderung schreibt den Funkspruch. Verlegung: „Verlegung …“, dann das Ziel wählen.
 - **Bootstagebuch:** im Tab Boote je Tag, mit Betriebsstunden (Einsatztag, Übertrag, Gesamt) und Tagebuch-Blatt zum Drucken. Den Stand aus dem Papierbuch trägt man einmal unter „Übertrag …“ ein.

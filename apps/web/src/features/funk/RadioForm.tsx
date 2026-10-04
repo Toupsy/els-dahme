@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import {
   HQ_CALL_SIGN,
   RADIO_CALL_SIGNS,
@@ -9,9 +9,13 @@ import {
 } from "@els/domain";
 import { useDispatch, useRuntime } from "../../core/runtime";
 
-/** Neuer Funkspruch: Schnelleingabe („78-1 Motor läuft, …“) oder Felder, dazu Standardtexte. */
-export function RadioForm({ date }: { date: string }) {
+/**
+ * Neuer Funkspruch: Schnelleingabe („78-1 Motor läuft, …“) oder Felder, dazu Standardtexte.
+ * `compact` (Panel neben der Karte): immer jetzt, ohne Uhrzeit und Textknöpfe.
+ */
+export function RadioForm({ date, compact = false }: { date: string; compact?: boolean }) {
   const runtime = useRuntime();
+  const ids = useId();
   const { dispatch, error } = useDispatch();
   const [from, setFrom] = useState<string>(HQ_CALL_SIGN);
   const [to, setTo] = useState("Alle");
@@ -51,7 +55,7 @@ export function RadioForm({ date }: { date: string }) {
   }
 
   return (
-    <form className="card radio-form" onSubmit={submit}>
+    <form className={compact ? "radio-form compact" : "card radio-form"} onSubmit={submit}>
       <input
         className="quick"
         aria-label="Schnelleingabe"
@@ -65,19 +69,21 @@ export function RadioForm({ date }: { date: string }) {
         </p>
       )}
       <div className="radio-fields">
-        <input aria-label="Von" list="callsigns" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input aria-label="An" list="callsigns" value={to} onChange={(e) => setTo(e.target.value)} />
-        <input
-          aria-label="Uhrzeit"
-          type="time"
-          value={time}
-          required={!isToday}
-          onChange={(e) => setTime(e.target.value)}
-          title={isToday ? "Leer = jetzt" : "Uhrzeit des Funkspruchs"}
-        />
+        <input aria-label="Von" list={`${ids}-calls`} value={from} onChange={(e) => setFrom(e.target.value)} />
+        <input aria-label="An" list={`${ids}-calls`} value={to} onChange={(e) => setTo(e.target.value)} />
+        {!compact && (
+          <input
+            aria-label="Uhrzeit"
+            type="time"
+            value={time}
+            required={!isToday}
+            onChange={(e) => setTime(e.target.value)}
+            title={isToday ? "Leer = jetzt" : "Uhrzeit des Funkspruchs"}
+          />
+        )}
         <input
           aria-label="Nachricht"
-          list="standard-texts"
+          list={`${ids}-texts`}
           placeholder="Nachricht"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -86,23 +92,25 @@ export function RadioForm({ date }: { date: string }) {
           Eintragen
         </button>
       </div>
-      <datalist id="callsigns">
+      <datalist id={`${ids}-calls`}>
         {RADIO_CALL_SIGNS.map((c) => (
           <option key={c} value={c} />
         ))}
       </datalist>
-      <datalist id="standard-texts">
+      <datalist id={`${ids}-texts`}>
         {STANDARD_TEXTS.map((t) => (
           <option key={t} value={t} />
         ))}
       </datalist>
-      <div className="chips">
-        {STANDARD_TEXTS.slice(0, 12).map((t) => (
-          <button type="button" key={t} className="chip" onClick={() => setText(t)}>
-            {t}
-          </button>
-        ))}
-      </div>
+      {!compact && (
+        <div className="chips">
+          {STANDARD_TEXTS.slice(0, 12).map((t) => (
+            <button type="button" key={t} className="chip" onClick={() => setText(t)}>
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
       {(timeError ?? error) && <p className="error">{timeError ?? error}</p>}
     </form>
   );

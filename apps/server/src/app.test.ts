@@ -171,13 +171,23 @@ describe("Sync", () => {
     expect(second.ledger.state.radio).toHaveLength(1);
   });
 
-  it("schützt Protokoll und Funktagebuch gegen Ändern und Löschen", async () => {
+  it("schützt Protokoll, Funktagebuch und Bootsbesatzung gegen Ändern und Löschen", async () => {
     const { app, db } = await setup();
     const cookies = cookieOf(await login(app));
     await app.inject({ method: "POST", url: "/api/sync/push", cookies, payload: { intents: [radioIntent()] } });
     expect(() => db.prepare("UPDATE radio_entries SET text = 'x'").run()).toThrow(/append-only/);
     expect(() => db.prepare("DELETE FROM radio_entries").run()).toThrow(/append-only/);
     expect(() => db.prepare("DELETE FROM intents").run()).toThrow(/append-only/);
+    const crew = {
+      ...radioIntent(),
+      type: "boat.crew",
+      data: { boat: "78-1", date: "2026-07-01", bootsfuehrer: "Bootsführer A", bootsgast: "Gast B" },
+    };
+    await app.inject({ method: "POST", url: "/api/sync/push", cookies, payload: { intents: [crew] } });
+    expect(db.prepare("SELECT boat, bootsgast FROM crew_entries").all()).toEqual([
+      { boat: "78-1", bootsgast: "Gast B" },
+    ]);
+    expect(() => db.prepare("UPDATE crew_entries SET bootsgast = 'x'").run()).toThrow(/append-only/);
   });
 
   it("verlangt einen vollständigen Abgleich, wenn der Gerätestand vor dem Server liegt", async () => {

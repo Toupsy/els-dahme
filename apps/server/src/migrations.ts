@@ -50,4 +50,22 @@ export const migrations: { version: number; name: string; sql: string }[] = [
       );
     `,
   },
+  {
+    version: 2,
+    name: "bootsbesatzung",
+    sql: `
+      -- Bootsbesatzung je Tag, append-only. Der letzte Eintrag eines Tages gilt.
+      CREATE TABLE crew_entries (
+        id TEXT PRIMARY KEY,
+        intent_seq INTEGER NOT NULL REFERENCES intents(seq),
+        boat TEXT NOT NULL,
+        date TEXT NOT NULL,
+        bootsfuehrer TEXT NOT NULL,
+        bootsgast TEXT NOT NULL,
+        at TEXT NOT NULL
+      );
+      CREATE TRIGGER crew_no_update BEFORE UPDATE ON crew_entries BEGIN SELECT RAISE(ABORT, 'append-only'); END;
+      CREATE TRIGGER crew_no_delete BEFORE DELETE ON crew_entries BEGIN SELECT RAISE(ABORT, 'append-only'); END;
+    `,
+  },
 ];

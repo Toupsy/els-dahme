@@ -1,0 +1,52 @@
+.crew-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.crew-grid h2 {
+  display: flex;
+  justify-content: space-between;
+}
+.count {
+  min-width: 2em;
+  text-align: center;
+  border-radius: 999px;
+  background: var(--bg);
+}
+.person {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.person .name {
+  display: grid;
+}
+.person small {
+  color: var(--dim);
+}
+.person.away .name {
+  color: var(--dim);
+  text-decoration: line-through;
+}
+.person .error {
+  grid-column: 1 / -1;
+}
+.roster-preview {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.roster-preview th,
+.roster-preview td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+.roster-preview td:first-child {
+  text-align: left;
+}
+.warnings li {
+  color: var(--warn);
+}

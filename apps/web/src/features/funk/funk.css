@@ -1,0 +1,40 @@
+.radio-form {
+  display: grid;
+  grid-template-columns: 110px 110px 1fr auto;
+  gap: 8px;
+}
+@media (max-width: 700px) {
+  .radio-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.radio-form .error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.radio-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.radio-list li {
+  display: grid;
+  grid-template-columns: 60px 150px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.radio-list li:last-child {
+  border-bottom: 0;
+}
+.radio-list .time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.radio-list .calls {
+  color: var(--dim);
+}

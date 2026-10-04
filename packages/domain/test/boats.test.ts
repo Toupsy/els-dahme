@@ -153,3 +153,22 @@ describe("Boote", () => {
     expect(crewOf(state, "78-1", "2026-07-01")?.bootsgast).toBe("C");
   });
 });
+
+describe("Tagebuch-Modell", () => {
+  it("liefert Fahrten, Betriebsstunden und Besatzung eines Tages aus einer Quelle", async () => {
+    const { logbookDay } = await import("../src");
+    const state = run([
+      [T("06:00"), { type: "boat.hoursBase", data: { boat: "78-3", minutes: 600, since: null } }],
+      [
+        T("06:10"),
+        { type: "boat.crew", data: { boat: "78-3", date: "2026-07-01", bootsfuehrer: "A", bootsgast: "B" } },
+      ],
+      [T("08:00"), { type: "boat.motorOn", data: { boat: "78-3", purpose: "Probefahrt" } }],
+      [T("08:20"), { type: "boat.motorOff", data: { boat: "78-3" } }],
+    ]);
+    const log = logbookDay(state, "78-3", "2026-07-01", parseTs("2026-07-01T09:00:00.000Z"));
+    expect(log.trips.map((t) => t.minutes)).toEqual([20]);
+    expect(log.hours).toEqual({ dayMin: 20, carryMin: 600, totalMin: 620 });
+    expect(log.crew?.bootsfuehrer).toBe("A");
+  });
+});

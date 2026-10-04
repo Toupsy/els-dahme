@@ -1,7 +1,7 @@
 import { fail } from "./errors";
 import { AUTO, classifyMotorMessage, splitReason, stopStation } from "./funk";
 import type { IntentOf } from "./intents";
-import { appendRadio, effectiveRadio } from "./radio";
+import { appendRadio, effectiveRadio, effectiveRadioOf } from "./radio";
 import type { RadioEntry, State } from "./state";
 import { BOAT_IDS, DEFAULT_BOAT_HOMES, HQ_CALL_SIGN, STATIONS, type BoatId, type StationId } from "./stations";
 import { dayStart, parseTs, toIso } from "./time";
@@ -70,7 +70,7 @@ const cache = new WeakMap<State, Record<BoatId, BoatStatus>>();
 export function boatStatuses(state: State): Record<BoatId, BoatStatus> {
   let result = cache.get(state);
   if (!result) {
-    const effective = effectiveRadio(state.radio);
+    const effective = effectiveRadioOf(state);
     result = Object.fromEntries(BOAT_IDS.map((id) => [id, deriveBoat(state, id, effective)])) as Record<
       BoatId,
       BoatStatus

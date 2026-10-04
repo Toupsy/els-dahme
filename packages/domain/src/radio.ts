@@ -67,3 +67,15 @@ export function correctionChain(entries: readonly RadioEntry[], id: string): Rad
 export function radioOfDay(entries: readonly RadioEntry[], date: string): RadioEntry[] {
   return effectiveRadio(entries).filter((e) => watchDate(e.at) === date);
 }
+
+const effectiveCache = new WeakMap<readonly RadioEntry[], RadioEntry[]>();
+
+/** Gültige Einträge eines Zustands; je Eintragsliste nur einmal berechnet. */
+export function effectiveRadioOf(state: State): RadioEntry[] {
+  let result = effectiveCache.get(state.radio);
+  if (!result) {
+    result = effectiveRadio(state.radio);
+    effectiveCache.set(state.radio, result);
+  }
+  return result;
+}

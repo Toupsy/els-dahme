@@ -11,3 +11,4 @@ test-results/
 *.db
 *.db-*
 data/
+apps/web/dist-preview

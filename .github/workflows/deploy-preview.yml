@@ -1,0 +1,56 @@
+name: Vorschau (main)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloudflare-Zugang prüfen
+        id: cf
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Vorschau übersprungen::CLOUDFLARE_API_TOKEN oder CLOUDFLARE_ACCOUNT_ID fehlt."
+            echo "Vorschau übersprungen: CLOUDFLARE_API_TOKEN oder CLOUDFLARE_ACCOUNT_ID fehlt." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cf.outputs.ok == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.cf.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.cf.outputs.ok == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.cf.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.cf.outputs.ok == 'true'
+        run: pnpm build:preview
+      - name: Demo els-dahme-demo veröffentlichen
+        id: deploy
+        if: steps.cf.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy --config wrangler.jsonc
+      - if: steps.cf.outputs.ok == 'true'
+        run: |
+          echo "Demo: ${{ steps.deploy.outputs.deployment-url }}" >> "$GITHUB_STEP_SUMMARY"

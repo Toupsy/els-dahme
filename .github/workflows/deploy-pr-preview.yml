@@ -1,0 +1,96 @@
+name: Vorschau (PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  WORKER_NAME: els-dahme-pr-${{ github.event.pull_request.number }}
+
+jobs:
+  deploy:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloudflare-Zugang prüfen
+        id: cf
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=PR-Vorschau übersprungen::CLOUDFLARE_API_TOKEN oder CLOUDFLARE_ACCOUNT_ID fehlt."
+            echo "PR-Vorschau übersprungen: CLOUDFLARE_API_TOKEN oder CLOUDFLARE_ACCOUNT_ID fehlt." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cf.outputs.ok == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.cf.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.cf.outputs.ok == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.cf.outputs.ok == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.cf.outputs.ok == 'true'
+        run: pnpm build:preview
+      - name: PR-Worker veröffentlichen
+        id: deploy
+        if: steps.cf.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy --config wrangler.jsonc --name ${{ env.WORKER_NAME }}
+      - name: Vorschau-URL im PR vermerken
+        if: steps.cf.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.deployment-url }}
+        with:
+          script: |
+            const marker = "<!-- els-dahme-pr-preview -->";
+            const url = process.env.PREVIEW_URL;
+            const body = `${marker}\n**Vorschau:** ${url}\n\nDemo-Build dieses PRs (ohne Server, Daten nur lokal im Browser). Wird bei jedem Push aktualisiert und beim Schließen des PRs gelöscht.`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloudflare-Zugang prüfen
+        id: cf
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Aufräumen übersprungen::Cloudflare-Secrets fehlen."
+          fi
+      - name: PR-Worker löschen
+        if: steps.cf.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: delete --name ${{ env.WORKER_NAME }} --force

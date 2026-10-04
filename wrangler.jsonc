@@ -1,0 +1,13 @@
+{
+  // Öffentliche Vorschau (Demo-Build). PR-Vorschauen überschreiben den Namen per --name.
+  "name": "els-dahme-demo",
+  "main": "worker/preview.ts",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./apps/web/dist-preview",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/health"],
+    "not_found_handling": "single-page-application",
+  },
+}

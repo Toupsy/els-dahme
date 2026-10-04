@@ -15,16 +15,7 @@ export const STATION_IDS = Object.keys(STATIONS) as StationId[];
 export const TOWER_IDS = STATION_IDS.filter((id) => id !== "hw");
 
 /** Küstenreihenfolge Süd → Nord. */
-export const COAST_ORDER: readonly StationId[] = [
-  "9-12",
-  "9-13",
-  "hw",
-  "9-14",
-  "9-15",
-  "9-16",
-  "9-17",
-  "9-18",
-];
+export const COAST_ORDER: readonly StationId[] = ["9-12", "9-13", "hw", "9-14", "9-15", "9-16", "9-17", "9-18"];
 
 export const BOAT_IDS = ["78-1", "78-2", "78-3"] as const;
 export type BoatId = (typeof BOAT_IDS)[number];
@@ -38,13 +29,7 @@ export const DEFAULT_BOAT_HOMES: Record<BoatId, StationId> = {
 
 /** Die Hauptwache heißt im Funk „AD“, auf der Karte „HW“. */
 export const HQ_CALL_SIGN = "AD";
-export const RADIO_CALL_SIGNS = [
-  HQ_CALL_SIGN,
-  ...TOWER_IDS,
-  ...BOAT_IDS,
-  "Alle",
-  "Leitstelle",
-] as const;
+export const RADIO_CALL_SIGNS = [HQ_CALL_SIGN, ...TOWER_IDS, ...BOAT_IDS, "Alle", "Leitstelle"] as const;
 
 export const MAP_DEFAULTS = {
   center: { lat: 54.2325, lng: 11.0865 },

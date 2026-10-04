@@ -50,7 +50,16 @@ export function createLedger(db: Db, log: (message: string) => void = () => {}) 
     );
     const seq = Number(lastInsertRowid);
     for (const entry of next.radio.slice(state.radio.length))
-      insertRadio.run(entry.id, seq, entry.at, entry.from, entry.to, entry.text, entry.correctionOf, entry.auto ? 1 : 0);
+      insertRadio.run(
+        entry.id,
+        seq,
+        entry.at,
+        entry.from,
+        entry.to,
+        entry.text,
+        entry.correctionOf,
+        entry.auto ? 1 : 0,
+      );
     return seq;
   });
 
@@ -79,7 +88,8 @@ export function createLedger(db: Db, log: (message: string) => void = () => {}) 
     /** Ein Cursor hinter dem Serverstand (z. B. nach einer Wiederherstellung) verlangt einen vollständigen Abgleich. */
     pull(since: number, limit = PULL_LIMIT): PullResponse {
       const { head } = selectHead.get() as { head: number };
-      if (since > head) throw new DomainError("CONFLICT", "Serverstand ist älter als der Gerätestand. Vollständiger Abgleich nötig.");
+      if (since > head)
+        throw new DomainError("CONFLICT", "Serverstand ist älter als der Gerätestand. Vollständiger Abgleich nötig.");
       const size = Math.max(1, Math.min(limit, PULL_LIMIT));
       const page = selectPage.all(since, size + 1) as { seq: number; body: string }[];
       const hasMore = page.length > size;

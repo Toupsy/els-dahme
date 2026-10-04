@@ -49,8 +49,7 @@ export function effectiveRadio(entries: readonly RadioEntry[]): RadioEntry[] {
 export function assertCorrectable(state: State, id: string) {
   const target = state.radio.find((e) => e.id === id);
   if (!target) fail("CONFLICT", "Der zu korrigierende Funkeintrag fehlt.");
-  if (state.radio.some((e) => e.correctionOf === id))
-    fail("CONFLICT", "Dieser Eintrag wurde bereits korrigiert.");
+  if (state.radio.some((e) => e.correctionOf === id)) fail("CONFLICT", "Dieser Eintrag wurde bereits korrigiert.");
 }
 
 /** Korrekturverlauf eines gültigen Eintrags, ältester zuerst. */

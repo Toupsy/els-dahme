@@ -13,8 +13,7 @@ export function isUtcTimestamp(value: string): boolean {
 }
 
 export function parseTs(value: string): number {
-  if (!isUtcTimestamp(value))
-    throw new DomainError("INVALID_INPUT", `Ungültiger Zeitstempel: ${value}`);
+  if (!isUtcTimestamp(value)) throw new DomainError("INVALID_INPUT", `Ungültiger Zeitstempel: ${value}`);
   return Date.parse(value);
 }
 
@@ -39,9 +38,7 @@ const partsFormat = new Intl.DateTimeFormat("en-CA", {
 });
 
 function localParts(ms: number) {
-  const parts = Object.fromEntries(
-    partsFormat.formatToParts(ms).map((p) => [p.type, p.value]),
-  );
+  const parts = Object.fromEntries(partsFormat.formatToParts(ms).map((p) => [p.type, p.value]));
   return {
     year: Number(parts.year),
     month: Number(parts.month),
@@ -80,9 +77,7 @@ export function watchDate(at: string | number): string {
 
 export function shiftDate(date: string, days: number): string {
   checkDate(date);
-  return new Date(Date.parse(`${date}T12:00:00Z`) + days * DAY)
-    .toISOString()
-    .slice(0, 10);
+  return new Date(Date.parse(`${date}T12:00:00Z`) + days * DAY).toISOString().slice(0, 10);
 }
 
 /** Tagesbeginn 00:00 Ortszeit als UTC-Millisekunden. */

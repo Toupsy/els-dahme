@@ -1,4 +1,7 @@
-import { MAP_DEFAULTS } from "./stations";
+import type { FLAGS } from "./intents";
+import { BOAT_IDS, MAP_DEFAULTS, STATION_IDS, type BoatId, type StationId } from "./stations";
+
+export type Flag = (typeof FLAGS)[number];
 
 export type RadioEntry = {
   /** Eintrags-ID: `<intentId>` oder `<intentId>:<n>` bei mehreren Einträgen je Aktion. */
@@ -15,8 +18,31 @@ export type RadioEntry = {
   auto: boolean;
 };
 
+/** Bootsbesatzung eines Tages; append-only, der letzte Eintrag gilt. */
+export type CrewEntry = {
+  id: string;
+  boat: BoatId;
+  date: string;
+  bootsfuehrer: string;
+  bootsgast: string;
+  at: string;
+};
+
 export type Settings = {
   mapBearing: number;
+};
+
+export type TowerState = { open: boolean; flag: Flag };
+
+/** Gespeicherte Fakten zu einem Boot. Status, Liegeplatz und Fahrten werden daraus und aus dem Funk berechnet. */
+export type BoatFacts = {
+  inService: boolean;
+  /** Übertrag aus dem Papierbuch und Stichtag (00:00 Ortszeit, UTC). */
+  hoursBase: { minutes: number; since: string | null };
+  /** Verwaltungs-Korrekturen des Liegeplatzes (ohne Fahrt). */
+  moves: { at: string; station: StationId }[];
+  /** Außer- und Wieder-in-Dienst-Zeitpunkte für die Anzeige. */
+  serviceAt: string | null;
 };
 
 /**
@@ -26,12 +52,23 @@ export type Settings = {
  */
 export type State = {
   radio: RadioEntry[];
+  crew: CrewEntry[];
+  towers: Record<StationId, TowerState>;
+  boats: Record<BoatId, BoatFacts>;
   settings: Settings;
 };
 
 export function initialState(): State {
   return {
     radio: [],
+    crew: [],
+    towers: Object.fromEntries(STATION_IDS.map((id) => [id, { open: id === "hw", flag: "" }])) as State["towers"],
+    boats: Object.fromEntries(
+      BOAT_IDS.map((id): [BoatId, BoatFacts] => [
+        id,
+        { inService: true, hoursBase: { minutes: 0, since: null }, moves: [], serviceAt: null },
+      ]),
+    ) as State["boats"],
     settings: { mapBearing: MAP_DEFAULTS.bearing },
   };
 }
@@ -41,6 +78,9 @@ export function cloneState(state: State): State {
   return {
     ...state,
     radio: state.radio.slice(),
+    crew: state.crew.slice(),
+    towers: { ...state.towers },
+    boats: { ...state.boats },
     settings: { ...state.settings },
   };
 }

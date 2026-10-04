@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import type { IntentInput, IntentType } from "@els/domain";
+import type { Intent, IntentInput, IntentType } from "@els/domain";
 import { errorMessage, type Ledger, type LedgerSnapshot } from "./ledger";
 
 export type SyncStatus =
@@ -57,7 +57,8 @@ export function useNow(intervalMs = 15_000): number {
   return now;
 }
 
-export type Dispatch = <T extends IntentType>(input: IntentInput<T>) => Promise<boolean>;
+/** Liefert die angenommene Aktion oder null bei einem Fachfehler. */
+export type Dispatch = <T extends IntentType>(input: IntentInput<T>) => Promise<Intent | null>;
 
 /** Löst eine Aktion aus. Fachfehler erscheinen als Hinweis, nichts wird gespeichert. */
 export function useDispatch(): { dispatch: Dispatch; error: string | null; clearError: () => void } {
@@ -65,13 +66,13 @@ export function useDispatch(): { dispatch: Dispatch; error: string | null; clear
   const [error, setError] = useState<string | null>(null);
   const dispatch: Dispatch = async (input) => {
     try {
-      await runtime.ledger.dispatch(input);
+      const intent = await runtime.ledger.dispatch(input);
       setError(null);
       runtime.kick();
-      return true;
+      return intent;
     } catch (e) {
       setError(errorMessage(e));
-      return false;
+      return null;
     }
   };
   return { dispatch, error, clearError: () => setError(null) };

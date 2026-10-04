@@ -105,3 +105,9 @@
     grid-column: 1 / -1;
   }
 }
+.radio-form .call.ok {
+  border-color: var(--ok);
+}
+.radio-form .call.bad {
+  border-color: var(--bad);
+}

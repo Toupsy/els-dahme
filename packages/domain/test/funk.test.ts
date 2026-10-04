@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { classifyMotorMessage, parseQuickRadio, purposeInBook, splitReason, stopStation } from "../src";
+import {
+  classifyMotorMessage,
+  parseQuickRadio,
+  purposeInBook,
+  resolveCallSign,
+  splitReason,
+  stopStation,
+} from "../src";
 
 describe("Funk", () => {
   it("klassifiziert Motor-Sprüche wie die Feature-App", () => {
@@ -23,6 +30,24 @@ describe("Funk", () => {
     expect(parseQuickRadio("hw Alle Funkprobe")).toEqual({ from: "AD", to: "Alle", text: "Funkprobe" });
     expect(parseQuickRadio("AD Wetter")).toEqual({ from: "AD", to: "Alle", text: "Wetter" });
     expect(parseQuickRadio("Bitte kommen")).toBeNull();
+  });
+
+  it("erkennt Rufnamen beim Tippen, Trenner sind egal", () => {
+    expect(resolveCallSign("")).toEqual({ state: "empty" });
+    expect(resolveCallSign("7")).toEqual({ state: "prefix" });
+    expect(resolveCallSign("78")).toEqual({ state: "prefix" });
+    expect(resolveCallSign("78-")).toEqual({ state: "prefix" });
+    expect(resolveCallSign("781")).toEqual({ state: "exact", value: "78-1" });
+    expect(resolveCallSign("78.2")).toEqual({ state: "exact", value: "78-2" });
+    expect(resolveCallSign("873")).toEqual({ state: "exact", value: "78-3" });
+    expect(resolveCallSign("915")).toEqual({ state: "exact", value: "9-15" });
+    expect(resolveCallSign("hw")).toEqual({ state: "exact", value: "AD" });
+    expect(resolveCallSign("ad")).toEqual({ state: "exact", value: "AD" });
+    expect(resolveCallSign("a")).toEqual({ state: "prefix" });
+    expect(resolveCallSign("ALLE")).toEqual({ state: "exact", value: "Alle" });
+    expect(resolveCallSign("lst")).toEqual({ state: "exact", value: "Leitstelle" });
+    expect(resolveCallSign("919")).toEqual({ state: "unknown" });
+    expect(resolveCallSign("x")).toEqual({ state: "unknown" });
   });
 
   it("liest Ziel und Liegeplatz aus dem Text", () => {

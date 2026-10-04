@@ -1,11 +1,12 @@
 .lage {
-  display: grid;
-  grid-template-columns: 1fr 400px;
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 .lage-map {
   position: relative;
-  min-height: 300px;
+  flex: 1;
+  min-height: 160px;
 }
 .map {
   position: absolute;
@@ -25,32 +26,57 @@
 .map-tools .btn {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+.lage-split {
+  flex: 0 0 12px;
+  position: relative;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  cursor: row-resize;
+  touch-action: none;
+}
+.lage-split::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 48px;
+  height: 3px;
+  margin-left: -24px;
+  border-radius: 2px;
+  background: var(--dim);
+  opacity: 0.6;
+}
+.lage-split:focus-visible {
+  outline: 3px solid var(--accent);
+}
 .lage-panel {
-  min-height: 0;
+  flex: 0 0 42%;
+  min-height: 140px;
+  max-height: calc(100% - 172px);
   overflow: hidden;
   background: var(--card);
-  border-left: 1px solid var(--line);
 }
 
-/* Funktagebuch und Notizen neben der Karte */
+/* Funktagebuch und Notizen unter der Karte (wie in der Feature-App) */
 .funk-panel {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(150px, 32%);
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
   height: 100%;
 }
 .funk-panel section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-height: 0;
   overflow: auto;
-  padding: 14px 16px;
+  padding: 10px 16px 12px;
 }
 .funk-panel h2 {
   margin: 0;
 }
 .funk-panel-notes {
-  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
 }
 .funk-panel-notes textarea {
   flex: 1;
@@ -63,8 +89,12 @@
 }
 .panel-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
+}
+.panel-head .btn {
+  min-height: 0;
+  padding: 0;
 }
 .radio-log {
   flex: 1;
@@ -247,20 +277,18 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-/* Schmale Geräte: Karte oben, Panel darunter und als Ganzes scrollbar */
-@media (max-width: 900px) {
-  .lage {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 45vh;
-  }
+/* Schmale Geräte: Funktagebuch und Notizen untereinander, Panel scrollt als Ganzes */
+@media (max-width: 760px) {
   .lage-panel {
     overflow: auto;
-    border-left: 0;
-    border-top: 1px solid var(--line);
   }
   .funk-panel {
     display: block;
     height: auto;
+  }
+  .funk-panel-notes {
+    border-left: 0;
+    border-top: 1px solid var(--line);
   }
   .radio-log {
     max-height: 240px;

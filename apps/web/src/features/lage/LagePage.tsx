@@ -1,6 +1,6 @@
 import "./lage.css";
 import "../einsaetze/einsaetze.css";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   activeIncidents,
   boatStatuses,
@@ -19,6 +19,7 @@ import { Dialog } from "./Dialog";
 import { FunkPanel } from "./FunkPanel";
 import { MapView } from "./MapView";
 import { boatMarkers, incidentMarkers, stationMarkers } from "./markers";
+import { Splitter, usePanelHeight } from "./Splitter";
 import { StationPanel } from "./StationPanel";
 
 export type Selection =
@@ -30,12 +31,14 @@ export type Selection =
 
 /**
  * #/lage, #/lage/einsatz (Tippen auf die Karte eröffnet einen Einsatz).
- * Turm, Boot oder Einsatz öffnen ein Popup; daneben stehen Funktagebuch und Notizen.
+ * Turm, Boot oder Einsatz öffnen ein Popup; unter der Karte stehen Funktagebuch und Notizen.
  */
 export function LagePage({ rest }: { rest: string[] }) {
   const { state } = useLedger();
   const [selection, setSelection] = useState<Selection>(null);
   const [north, setNorth] = useState(false);
+  const [panelHeight, setPanelHeight] = usePanelHeight();
+  const root = useRef<HTMLDivElement>(null);
   const pressMode = rest[0] === "einsatz";
   const boats = boatStatuses(state);
   const incidents = activeIncidents(state);
@@ -64,7 +67,7 @@ export function LagePage({ rest }: { rest: string[] }) {
   const incident = selection?.kind === "incident" ? state.incidents[selection.id] : undefined;
 
   return (
-    <div className="lage">
+    <div className="lage" ref={root}>
       <div className="lage-map">
         <MapView
           markers={markers}
@@ -86,7 +89,8 @@ export function LagePage({ rest }: { rest: string[] }) {
           </button>
         </div>
       </div>
-      <aside className="lage-panel">
+      <Splitter container={root} height={panelHeight} onChange={setPanelHeight} />
+      <aside className="lage-panel" style={panelHeight ? { flexBasis: panelHeight } : undefined}>
         <FunkPanel />
       </aside>
       {selection && (

@@ -34,9 +34,13 @@ test("Demo: Lage mit Funktagebuch und Notizen, Turm im Popup", async ({ page }) 
   await panel.getByRole("button", { name: "Eintragen" }).click();
   await expect(page.getByTestId("lage-radio-log")).toContainText("Lage-Test Funkspruch");
 
-  await page.getByLabel("Notizen").fill("Notiz bleibt");
+  await page.getByRole("textbox", { name: "Notizen" }).fill("Notiz bleibt");
   await page.reload();
-  await expect(page.getByLabel("Notizen")).toHaveValue("Notiz bleibt");
+  await expect(page.getByRole("textbox", { name: "Notizen" })).toHaveValue("Notiz bleibt");
+
+  const before = (await panel.boundingBox())!.height;
+  await page.getByRole("separator", { name: "Höhe von Funktagebuch und Notizen" }).press("ArrowUp");
+  await expect.poll(async () => (await panel.boundingBox())!.height).toBeGreaterThan(before);
 
   await page.locator(".map-pin.tower", { hasText: "9-15" }).click();
   const popup = page.getByRole("dialog", { name: "Turm 9-15" });

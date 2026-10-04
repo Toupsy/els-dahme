@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { TABS, go, useRoute, type TabId } from "../../core/route";
 import { useRuntime } from "../../core/runtime";
 import { SyncBadge } from "../../components/SyncBadge";
+import { BootePage } from "../boote/BootePage";
 import { FunkPage } from "../funk/FunkPage";
+import { LagePage } from "../lage/LagePage";
 import { SettingsPage } from "../einstellungen/SettingsPage";
 
 const PAGES: Record<TabId, (props: { rest: string[] }) => ReactNode> = {
-  lage: () => <Placeholder />,
-  boote: () => <Placeholder />,
+  lage: () => <LagePage />,
+  boote: () => <BootePage />,
   einsaetze: () => <Placeholder />,
   funk: () => <FunkPage />,
   personal: () => <Placeholder />,

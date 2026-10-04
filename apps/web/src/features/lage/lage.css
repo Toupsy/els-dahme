@@ -23,11 +23,15 @@
 .map.press-mode {
   cursor: crosshair;
 }
-.map-north {
+.map-tools {
   position: absolute;
   top: 12px;
   left: 12px;
   z-index: 500;
+  display: flex;
+  gap: 8px;
+}
+.map-tools .btn {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .lage-panel {
@@ -162,6 +166,9 @@
 .list-button span {
   margin-left: auto;
   color: var(--dim);
+}
+.list-button.incident {
+  border-left: 5px solid var(--bad);
 }
 .list-button.running {
   border-left: 5px solid var(--run);

@@ -3,14 +3,15 @@ import { TABS, go, useRoute, type TabId } from "../../core/route";
 import { useRuntime } from "../../core/runtime";
 import { SyncBadge } from "../../components/SyncBadge";
 import { BootePage } from "../boote/BootePage";
+import { EinsaetzePage } from "../einsaetze/EinsaetzePage";
 import { FunkPage } from "../funk/FunkPage";
 import { LagePage } from "../lage/LagePage";
 import { SettingsPage } from "../einstellungen/SettingsPage";
 
 const PAGES: Record<TabId, (props: { rest: string[] }) => ReactNode> = {
-  lage: () => <LagePage />,
+  lage: ({ rest }) => <LagePage rest={rest} />,
   boote: ({ rest }) => <BootePage rest={rest} />,
-  einsaetze: () => <Placeholder />,
+  einsaetze: () => <EinsaetzePage />,
   funk: () => <FunkPage />,
   personal: () => <Placeholder />,
   einstellungen: () => <SettingsPage />,

@@ -1,0 +1,146 @@
+[
+  {
+    "name": "einfache Fahrt",
+    "date": "2026-07-01",
+    "now": "2026-07-02 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:37:20", "78-1", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "Rundung ab 30 Sekunden",
+    "date": "2026-07-01",
+    "now": "2026-07-02 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:15:30", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 09:00:00", "78-1", "Motor läuft, Probefahrt"],
+      ["2026-07-01 09:15:29", "78-1", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "Fahrtwechsel bleibt eine Fahrt",
+    "date": "2026-07-01",
+    "now": "2026-07-02 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 09:00:00", "78-2", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 09:10:00", "78-2", "Einsatzfahrt aufgenommen"],
+      ["2026-07-01 09:20:00", "78-2", "Motor läuft, Einsatzfahrt"],
+      ["2026-07-01 09:30:00", "78-2", "Fahrtwechsel, Verlegungsfahrt nach 9-14"],
+      ["2026-07-01 09:45:10", "78-2", "Motor aus, E-klar 9-14"]
+    ]
+  },
+  {
+    "name": "Rundung je Fahrt, dann Summe",
+    "date": "2026-07-01",
+    "now": "2026-07-02 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:10:20", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 09:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 09:10:20", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 10:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 10:10:20", "78-1", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "offene Fahrt an vergangenem Tag",
+    "date": "2026-07-01",
+    "now": "2026-07-03 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [["2026-07-01 20:30:00", "78-3", "Motor läuft, Kontrollfahrt"]]
+  },
+  {
+    "name": "Fahrt über Mitternacht, Vortag",
+    "date": "2026-07-01",
+    "now": "2026-07-03 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 21:40:00", "78-1", "Motor läuft, Einsatzfahrt"],
+      ["2026-07-01 22:20:00", "78-1", "Motor aus, an der Hauptwache"]
+    ]
+  },
+  {
+    "name": "Fahrt über Mitternacht, Folgetag",
+    "date": "2026-07-02",
+    "now": "2026-07-03 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 21:40:00", "78-1", "Motor läuft, Einsatzfahrt"],
+      ["2026-07-01 22:20:00", "78-1", "Motor aus, an der Hauptwache"]
+    ]
+  },
+  {
+    "name": "Übertrag über mehrere Tage",
+    "date": "2026-07-03",
+    "now": "2026-07-04 12:00:00",
+    "base_min": 12540,
+    "base_at": "2026-06-30 22:00:00",
+    "entries": [
+      ["2026-06-30 10:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-06-30 11:00:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 09:33:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-02 12:00:00", "78-1", "Motor läuft, Ausbildungsfahrt"],
+      ["2026-07-02 12:45:40", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-03 07:00:00", "78-1", "Motor läuft, Materialtransport"],
+      ["2026-07-03 07:21:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-03 07:00:00", "78-2", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-03 08:00:00", "78-2", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "Stichtag schneidet Fahrt ab",
+    "date": "2026-07-02",
+    "now": "2026-07-03 12:00:00",
+    "base_min": 600,
+    "base_at": "2026-07-01 08:30:00",
+    "entries": [
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 09:00:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 10:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 10:30:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-02 10:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-02 10:05:00", "78-1", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "fremde Absender und Motor aus ohne Start",
+    "date": "2026-07-01",
+    "now": "2026-07-02 12:00:00",
+    "base_min": 0,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 07:00:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 08:00:00", "AD", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:05:00", "78-1", "Eintreffen Einsatzstelle"],
+      ["2026-07-01 08:20:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 08:30:00", "78-1", "Motor aus, E-klar Strand"]
+    ]
+  },
+  {
+    "name": "laufende Fahrt heute",
+    "date": "2026-07-01",
+    "now": "2026-07-01 10:12:40",
+    "base_min": 60,
+    "base_at": null,
+    "entries": [
+      ["2026-07-01 08:00:00", "78-1", "Motor läuft, Kontrollfahrt"],
+      ["2026-07-01 08:30:00", "78-1", "Motor aus, E-klar Strand"],
+      ["2026-07-01 10:00:00", "78-1", "Motor läuft, Einsatzfahrt"]
+    ]
+  }
+]

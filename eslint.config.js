@@ -17,8 +17,14 @@ export default ts.config(
   js.configs.recommended,
   ...ts.configs.recommended,
   {
-    files: ["scripts/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "packages/domain/reference/*.mjs"],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Vergleichsrechner gegen den Originalcode der Feature-App (CommonJS, Node).
+    files: ["packages/domain/reference/*.cjs"],
+    languageOptions: { globals: globals.node, sourceType: "commonjs" },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
   },
   {
     files: ["packages/domain/src/**/*.ts"],

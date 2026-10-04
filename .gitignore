@@ -12,3 +12,4 @@ test-results/
 *.db-*
 data/
 apps/web/dist-preview
+packages/domain/reference/*-out.json

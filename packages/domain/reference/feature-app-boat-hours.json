@@ -1,0 +1,657 @@
+[
+  {
+    "name": "einfache Fahrt",
+    "date": "2026-07-01",
+    "now": "2026-07-02T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:37:20.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 37,
+        "totalMin": 37,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T08:00:00.000Z",
+            "endedAt": "2026-07-01T08:37:20.000Z",
+            "minutes": 37,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Rundung ab 30 Sekunden",
+    "date": "2026-07-01",
+    "now": "2026-07-02T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:15:30.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T09:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Probefahrt"
+      },
+      {
+        "at": "2026-07-01T09:15:29.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 31,
+        "totalMin": 31,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T08:00:00.000Z",
+            "endedAt": "2026-07-01T08:15:30.000Z",
+            "minutes": 16,
+            "legs": ["Kontrollfahrt"]
+          },
+          {
+            "startedAt": "2026-07-01T09:00:00.000Z",
+            "endedAt": "2026-07-01T09:15:29.000Z",
+            "minutes": 15,
+            "legs": ["Probefahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Fahrtwechsel bleibt eine Fahrt",
+    "date": "2026-07-01",
+    "now": "2026-07-02T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T09:00:00.000Z",
+        "from": "78-2",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T09:10:00.000Z",
+        "from": "78-2",
+        "text": "Einsatzfahrt aufgenommen"
+      },
+      {
+        "at": "2026-07-01T09:20:00.000Z",
+        "from": "78-2",
+        "text": "Motor läuft, Einsatzfahrt"
+      },
+      {
+        "at": "2026-07-01T09:30:00.000Z",
+        "from": "78-2",
+        "text": "Fahrtwechsel, Verlegungsfahrt nach 9-14"
+      },
+      {
+        "at": "2026-07-01T09:45:10.000Z",
+        "from": "78-2",
+        "text": "Motor aus, E-klar 9-14"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 45,
+        "totalMin": 45,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T09:00:00.000Z",
+            "endedAt": "2026-07-01T09:45:10.000Z",
+            "minutes": 45,
+            "legs": ["Kontrollfahrt", "Einsatzfahrt", "Verlegungsfahrt nach 9-14"]
+          }
+        ]
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Rundung je Fahrt, dann Summe",
+    "date": "2026-07-01",
+    "now": "2026-07-02T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:10:20.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T09:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T09:10:20.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T10:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T10:10:20.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 30,
+        "totalMin": 30,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T08:00:00.000Z",
+            "endedAt": "2026-07-01T08:10:20.000Z",
+            "minutes": 10,
+            "legs": ["Kontrollfahrt"]
+          },
+          {
+            "startedAt": "2026-07-01T09:00:00.000Z",
+            "endedAt": "2026-07-01T09:10:20.000Z",
+            "minutes": 10,
+            "legs": ["Kontrollfahrt"]
+          },
+          {
+            "startedAt": "2026-07-01T10:00:00.000Z",
+            "endedAt": "2026-07-01T10:10:20.000Z",
+            "minutes": 10,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "offene Fahrt an vergangenem Tag",
+    "date": "2026-07-01",
+    "now": "2026-07-03T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T20:30:00.000Z",
+        "from": "78-3",
+        "text": "Motor läuft, Kontrollfahrt"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 90,
+        "totalMin": 90,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T20:30:00.000Z",
+            "endedAt": null,
+            "minutes": 90,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "Fahrt über Mitternacht, Vortag",
+    "date": "2026-07-01",
+    "now": "2026-07-03T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T21:40:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Einsatzfahrt"
+      },
+      {
+        "at": "2026-07-01T22:20:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, an der Hauptwache"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 20,
+        "totalMin": 20,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T21:40:00.000Z",
+            "endedAt": null,
+            "minutes": 20,
+            "legs": ["Einsatzfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Fahrt über Mitternacht, Folgetag",
+    "date": "2026-07-02",
+    "now": "2026-07-03T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T21:40:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Einsatzfahrt"
+      },
+      {
+        "at": "2026-07-01T22:20:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, an der Hauptwache"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 20,
+        "dayMin": 0,
+        "totalMin": 20,
+        "trips": []
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Übertrag über mehrere Tage",
+    "date": "2026-07-03",
+    "now": "2026-07-04T12:00:00.000Z",
+    "baseMin": 12540,
+    "baseAt": "2026-06-30T22:00:00.000Z",
+    "entries": [
+      {
+        "at": "2026-06-30T10:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-06-30T11:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T09:33:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-02T12:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Ausbildungsfahrt"
+      },
+      {
+        "at": "2026-07-02T12:45:40.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-03T07:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Materialtransport"
+      },
+      {
+        "at": "2026-07-03T07:21:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-03T07:00:00.000Z",
+        "from": "78-2",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-03T08:00:00.000Z",
+        "from": "78-2",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 12679,
+        "dayMin": 21,
+        "totalMin": 12700,
+        "trips": [
+          {
+            "startedAt": "2026-07-03T07:00:00.000Z",
+            "endedAt": "2026-07-03T07:21:00.000Z",
+            "minutes": 21,
+            "legs": ["Materialtransport"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 12540,
+        "dayMin": 60,
+        "totalMin": 12600,
+        "trips": [
+          {
+            "startedAt": "2026-07-03T07:00:00.000Z",
+            "endedAt": "2026-07-03T08:00:00.000Z",
+            "minutes": 60,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      },
+      "78-3": {
+        "carryMin": 12540,
+        "dayMin": 0,
+        "totalMin": 12540,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "Stichtag schneidet Fahrt ab",
+    "date": "2026-07-02",
+    "now": "2026-07-03T12:00:00.000Z",
+    "baseMin": 600,
+    "baseAt": "2026-07-01T08:30:00.000Z",
+    "entries": [
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T09:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T10:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T10:30:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-02T10:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-02T10:05:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 630,
+        "dayMin": 5,
+        "totalMin": 635,
+        "trips": [
+          {
+            "startedAt": "2026-07-02T10:00:00.000Z",
+            "endedAt": "2026-07-02T10:05:00.000Z",
+            "minutes": 5,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 600,
+        "dayMin": 0,
+        "totalMin": 600,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 600,
+        "dayMin": 0,
+        "totalMin": 600,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "fremde Absender und Motor aus ohne Start",
+    "date": "2026-07-01",
+    "now": "2026-07-02T12:00:00.000Z",
+    "baseMin": 0,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T07:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "AD",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:05:00.000Z",
+        "from": "78-1",
+        "text": "Eintreffen Einsatzstelle"
+      },
+      {
+        "at": "2026-07-01T08:20:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T08:30:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 0,
+        "dayMin": 20,
+        "totalMin": 20,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T08:00:00.000Z",
+            "endedAt": "2026-07-01T08:20:00.000Z",
+            "minutes": 20,
+            "legs": ["Kontrollfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 0,
+        "dayMin": 0,
+        "totalMin": 0,
+        "trips": []
+      }
+    }
+  },
+  {
+    "name": "laufende Fahrt heute",
+    "date": "2026-07-01",
+    "now": "2026-07-01T10:12:40.000Z",
+    "baseMin": 60,
+    "baseAt": null,
+    "entries": [
+      {
+        "at": "2026-07-01T08:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Kontrollfahrt"
+      },
+      {
+        "at": "2026-07-01T08:30:00.000Z",
+        "from": "78-1",
+        "text": "Motor aus, E-klar Strand"
+      },
+      {
+        "at": "2026-07-01T10:00:00.000Z",
+        "from": "78-1",
+        "text": "Motor läuft, Einsatzfahrt"
+      }
+    ],
+    "expected": {
+      "78-1": {
+        "carryMin": 60,
+        "dayMin": 43,
+        "totalMin": 103,
+        "trips": [
+          {
+            "startedAt": "2026-07-01T08:00:00.000Z",
+            "endedAt": "2026-07-01T08:30:00.000Z",
+            "minutes": 30,
+            "legs": ["Kontrollfahrt"]
+          },
+          {
+            "startedAt": "2026-07-01T10:00:00.000Z",
+            "endedAt": null,
+            "minutes": 13,
+            "legs": ["Einsatzfahrt"]
+          }
+        ]
+      },
+      "78-2": {
+        "carryMin": 60,
+        "dayMin": 0,
+        "totalMin": 60,
+        "trips": []
+      },
+      "78-3": {
+        "carryMin": 60,
+        "dayMin": 0,
+        "totalMin": 60,
+        "trips": []
+      }
+    }
+  }
+]

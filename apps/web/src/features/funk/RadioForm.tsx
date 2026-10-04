@@ -1,30 +1,28 @@
-import { useId, useState, type FormEvent } from "react";
-import {
-  HQ_CALL_SIGN,
-  RADIO_CALL_SIGNS,
-  STANDARD_TEXTS,
-  parseQuickRadio,
-  watchDate,
-  watchTimeToUtc,
-} from "@els/domain";
+import { useId, useRef, useState, type FormEvent } from "react";
+import { RADIO_CALL_SIGNS, STANDARD_TEXTS, parseQuickRadio, watchDate, watchTimeToUtc } from "@els/domain";
 import { useDispatch, useRuntime } from "../../core/runtime";
+import { CallSignInput } from "./CallSignInput";
 
 /**
  * Neuer Funkspruch: Schnelleingabe („78-1 Motor läuft, …“) oder Felder, dazu Standardtexte.
+ * Von/An starten leer und springen weiter, sobald der Rufname erkannt ist („781“ → „78-1“).
  * `compact` (Panel neben der Karte): immer jetzt, ohne Uhrzeit und Textknöpfe.
  */
 export function RadioForm({ date, compact = false }: { date: string; compact?: boolean }) {
   const runtime = useRuntime();
   const ids = useId();
   const { dispatch, error } = useDispatch();
-  const [from, setFrom] = useState<string>(HQ_CALL_SIGN);
-  const [to, setTo] = useState("Alle");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [text, setText] = useState("");
   const [time, setTime] = useState("");
   const [quick, setQuick] = useState("");
   const [timeError, setTimeError] = useState<string | null>(null);
   const isToday = date === watchDate(runtime.now());
   const parsed = parseQuickRadio(quick);
+  const fromRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLInputElement>(null);
 
   function applyQuick(value: string) {
     setQuick(value);
@@ -48,9 +46,12 @@ export function RadioForm({ date, compact = false }: { date: string; compact?: b
     }
     setTimeError(null);
     if (await dispatch({ type: "radio.append", data: { from, to, text, ...(at ? { at } : {}) } })) {
+      setFrom("");
+      setTo("");
       setText("");
       setQuick("");
       setTime("");
+      fromRef.current?.focus();
     }
   }
 
@@ -69,8 +70,22 @@ export function RadioForm({ date, compact = false }: { date: string; compact?: b
         </p>
       )}
       <div className="radio-fields">
-        <input aria-label="Von" list={`${ids}-calls`} value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input aria-label="An" list={`${ids}-calls`} value={to} onChange={(e) => setTo(e.target.value)} />
+        <CallSignInput
+          label="Von"
+          list={`${ids}-calls`}
+          inputRef={fromRef}
+          value={from}
+          onChange={setFrom}
+          onDone={() => toRef.current?.focus()}
+        />
+        <CallSignInput
+          label="An"
+          list={`${ids}-calls`}
+          inputRef={toRef}
+          value={to}
+          onChange={setTo}
+          onDone={() => textRef.current?.focus()}
+        />
         {!compact && (
           <input
             aria-label="Uhrzeit"
@@ -82,6 +97,7 @@ export function RadioForm({ date, compact = false }: { date: string; compact?: b
           />
         )}
         <input
+          ref={textRef}
           aria-label="Nachricht"
           list={`${ids}-texts`}
           placeholder="Nachricht"

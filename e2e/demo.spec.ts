@@ -4,11 +4,36 @@ test("Demo startet ohne Login, Aktion bleibt nach Reload erhalten", async ({ pag
   await page.goto("/#/funk");
   await expect(page.getByText("Demo – Daten nur lokal")).toBeVisible();
   await expect(page.getByLabel("Passcode")).toHaveCount(0);
+  await page.getByLabel("Von").fill("ad");
+  await page.getByLabel("An").fill("alle");
   await page.getByLabel("Nachricht").fill("Demo-Test Funkspruch");
   await page.getByRole("button", { name: "Eintragen" }).click();
   await expect(page.getByText("Demo-Test Funkspruch")).toBeVisible();
   await page.reload();
   await expect(page.getByText("Demo-Test Funkspruch")).toBeVisible();
+});
+
+test("Funktagebuch: Rufnamen werden erkannt und springen ins nächste Feld", async ({ page }) => {
+  await page.goto("/#/funk");
+  const from = page.getByLabel("Von");
+  const to = page.getByLabel("An");
+  await expect(from).toHaveValue("");
+  await expect(to).toHaveValue("");
+
+  await from.click();
+  await page.keyboard.type("781");
+  await expect(from).toHaveValue("78-1");
+  await expect(to).toBeFocused();
+  await page.keyboard.type("hw");
+  await expect(to).toHaveValue("AD");
+  await expect(page.getByLabel("Nachricht")).toBeFocused();
+  await page.keyboard.type("Motor läuft, Kontrollfahrt");
+  await page.keyboard.press("Enter");
+
+  await expect(page.getByTestId("radio-list")).toContainText("Motor läuft, Kontrollfahrt");
+  await expect(from).toHaveValue("");
+  await expect(to).toHaveValue("");
+  await expect(from).toBeFocused();
 });
 
 test("Demo: Boot starten, Reload, zurücksetzen", async ({ page }) => {
@@ -30,6 +55,8 @@ test("Demo: Boot starten, Reload, zurücksetzen", async ({ page }) => {
 test("Demo: Lage mit Funktagebuch und Notizen, Turm im Popup", async ({ page }) => {
   await page.goto("/#/lage");
   const panel = page.locator(".lage-panel");
+  await panel.getByLabel("Von").fill("ad");
+  await panel.getByLabel("An").fill("alle");
   await panel.getByLabel("Nachricht").fill("Lage-Test Funkspruch");
   await panel.getByRole("button", { name: "Eintragen" }).click();
   await expect(page.getByTestId("lage-radio-log")).toContainText("Lage-Test Funkspruch");

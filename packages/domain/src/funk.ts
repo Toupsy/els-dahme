@@ -1,4 +1,4 @@
-import { HQ_CALL_SIGN, RADIO_CALL_SIGNS, STATIONS, stationOfCallSign, type StationId } from "./stations";
+import { BOAT_IDS, HQ_CALL_SIGN, RADIO_CALL_SIGNS, STATIONS, stationOfCallSign, type StationId } from "./stations";
 
 /** Fahrtzwecke in der Schreibweise der Funksprüche („Motor läuft, <Zweck>“). */
 export const BOAT_PURPOSES = [
@@ -163,4 +163,35 @@ export function parseQuickRadio(input: string): { from: string; to: string; text
     to: second ?? (first === HQ_CALL_SIGN ? "Alle" : HQ_CALL_SIGN),
     text: tokens.slice(second ? 2 : 1).join(" "),
   };
+}
+
+/* ── Erkennende Eingabe der Felder „Von“/„An“ (wie kbResolve der Feature-App) ── */
+
+export type CallSignMatch = { state: "empty" | "prefix" | "unknown" } | { state: "exact" | "ambiguous"; value: string };
+
+/** Trenner sind bedeutungslos: „78-1“ = „78.1“ = „78 1“ = „781“. */
+function callSignKey(raw: string): string {
+  return raw.toLowerCase().replace(/[\s.\-_/]/g, "");
+}
+
+/** normalisiert → Rufname; dazu „HW“ → AD, „LSt“ → Leitstelle und der Zahlendreher „87-x“ → „78-x“. */
+const CALL_SIGN_KEYS: ReadonlyMap<string, string> = new Map([
+  ...RADIO_CALL_SIGNS.map((sign) => [callSignKey(sign), sign] as const),
+  ["hw", HQ_CALL_SIGN],
+  ["lst", "Leitstelle"],
+  ...BOAT_IDS.map((id) => [callSignKey(id.replace(/^78-/, "87-")), id] as const),
+]);
+
+/**
+ * Eingabe auflösen:
+ * exact → eindeutig, Feld kann weiterspringen; ambiguous → passt, ist aber auch Anfang
+ * eines längeren Rufnamens (Leerzeichen/Enter bestätigt); prefix → weitertippen; unknown → kein Treffer.
+ */
+export function resolveCallSign(raw: string): CallSignMatch {
+  const key = callSignKey(raw);
+  if (!key) return { state: "empty" };
+  const hit = CALL_SIGN_KEYS.get(key);
+  const longer = [...CALL_SIGN_KEYS.keys()].some((k) => k !== key && k.startsWith(key));
+  if (hit) return { state: longer ? "ambiguous" : "exact", value: hit };
+  return { state: longer ? "prefix" : "unknown" };
 }

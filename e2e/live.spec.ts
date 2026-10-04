@@ -8,6 +8,8 @@ async function login(page: Page, passcode = E2E_PASSCODE) {
 
 async function radio(page: Page, text: string) {
   await page.goto("/#/funk");
+  await page.getByLabel("Von").fill("ad");
+  await page.getByLabel("An").fill("alle");
   await page.getByLabel("Nachricht").fill(text);
   await page.getByRole("button", { name: "Eintragen" }).click();
   await expect(page.getByTestId("radio-list")).toContainText(text);
@@ -81,6 +83,8 @@ test("Abgelaufene Sitzung: erneuter Login, die Outbox bleibt erhalten", async ({
   await login(page);
   await expect(page.getByTestId("sync-badge")).toHaveAttribute("data-state", "synced");
   await context.clearCookies();
+  await page.getByLabel("Von").fill("ad");
+  await page.getByLabel("An").fill("alle");
   await page.getByLabel("Nachricht").fill("Nach Ablauf erfasst");
   await page.getByRole("button", { name: "Eintragen" }).click();
   await expect(page.getByLabel("Passcode")).toBeVisible();

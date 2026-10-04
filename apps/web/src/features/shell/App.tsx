@@ -6,6 +6,7 @@ import { BootePage } from "../boote/BootePage";
 import { EinsaetzePage } from "../einsaetze/EinsaetzePage";
 import { FunkPage } from "../funk/FunkPage";
 import { LagePage } from "../lage/LagePage";
+import { PersonalPage } from "../personal/PersonalPage";
 import { SettingsPage } from "../einstellungen/SettingsPage";
 
 const PAGES: Record<TabId, (props: { rest: string[] }) => ReactNode> = {
@@ -13,13 +14,9 @@ const PAGES: Record<TabId, (props: { rest: string[] }) => ReactNode> = {
   boote: ({ rest }) => <BootePage rest={rest} />,
   einsaetze: () => <EinsaetzePage />,
   funk: () => <FunkPage />,
-  personal: () => <Placeholder />,
+  personal: () => <PersonalPage />,
   einstellungen: () => <SettingsPage />,
 };
-
-function Placeholder() {
-  return <p className="empty">Dieser Bereich folgt.</p>;
-}
 
 export function App() {
   const route = useRoute();

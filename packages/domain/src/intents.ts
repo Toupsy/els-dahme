@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BOAT_PURPOSES } from "./funk";
 import { INCIDENT_EVENTS, INCIDENT_KINDS, INCIDENT_OUTCOMES } from "./incidents";
+import { ROSTER_ROLES } from "./roster";
 import { BOAT_IDS, STATION_IDS, type StationId } from "./stations";
 import { isUtcTimestamp } from "./time";
 
@@ -116,6 +117,21 @@ export const incidentCloseIntent = intent(
   }),
 );
 
+const personId = z.string().trim().min(1).max(120);
+export const rosterPersonSchema = z.object({
+  id: personId,
+  name: personName,
+  role: z.enum(ROSTER_ROLES),
+  station: station.nullable(),
+  boat: boat.nullable(),
+});
+export const rosterSetDayIntent = intent(
+  "roster.setDay",
+  z.object({ date, people: z.array(rosterPersonSchema).max(200) }),
+);
+export const personMoveIntent = intent("person.move", z.object({ date, person: personId, station }));
+export const personAwayIntent = intent("person.away", z.object({ date, person: personId, away: z.boolean() }));
+
 export const intentSchema = z.discriminatedUnion("type", [
   radioAppendIntent,
   radioCorrectIntent,
@@ -136,6 +152,9 @@ export const intentSchema = z.discriminatedUnion("type", [
   incidentEventIntent,
   incidentNoteIntent,
   incidentCloseIntent,
+  rosterSetDayIntent,
+  personMoveIntent,
+  personAwayIntent,
 ]);
 
 export type Intent = z.infer<typeof intentSchema>;

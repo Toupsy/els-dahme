@@ -1,5 +1,6 @@
 import type { Incident } from "./incidents";
 import type { FLAGS } from "./intents";
+import type { RosterPerson } from "./roster";
 import { BOAT_IDS, MAP_DEFAULTS, STATION_IDS, type BoatId, type StationId } from "./stations";
 
 export type Flag = (typeof FLAGS)[number];
@@ -57,8 +58,13 @@ export type State = {
   towers: Record<StationId, TowerState>;
   boats: Record<BoatId, BoatFacts>;
   incidents: Record<string, Incident>;
+  /** Wachplan je Tag (importiert) und die Änderungen des Tages je Person. */
+  roster: Record<string, RosterPerson[]>;
+  rosterChanges: Record<string, Record<string, PersonChange>>;
   settings: Settings;
 };
+
+export type PersonChange = { station?: StationId; away?: boolean };
 
 export function initialState(): State {
   return {
@@ -72,6 +78,8 @@ export function initialState(): State {
       ]),
     ) as State["boats"],
     incidents: {},
+    roster: {},
+    rosterChanges: {},
     settings: { mapBearing: MAP_DEFAULTS.bearing },
   };
 }
@@ -85,6 +93,8 @@ export function cloneState(state: State): State {
     towers: { ...state.towers },
     boats: { ...state.boats },
     incidents: { ...state.incidents },
+    roster: { ...state.roster },
+    rosterChanges: { ...state.rosterChanges },
     settings: { ...state.settings },
   };
 }

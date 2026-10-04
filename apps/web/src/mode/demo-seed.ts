@@ -1,4 +1,15 @@
-import { shiftDate, toIso, watchDate, type Intent, type IntentInput, type IntentType } from "@els/domain";
+import {
+  offset,
+  parseIntent,
+  seaBearing,
+  shiftDate,
+  stationPoint,
+  toIso,
+  watchDate,
+  type Intent,
+  type IntentInput,
+  type IntentType,
+} from "@els/domain";
 
 /**
  * Synthetische Beispieldaten für die Vorschau, relativ zu „jetzt“.
@@ -6,13 +17,16 @@ import { shiftDate, toIso, watchDate, type Intent, type IntentInput, type Intent
  */
 export function demoSeed(now: number, deviceId: string): Intent[] {
   const intents: Intent[] = [];
-  const add = <T extends IntentType>(minutesAgo: number, input: IntentInput<T>) =>
-    intents.push({
+  const add = <T extends IntentType>(minutesAgo: number, input: IntentInput<T>): string => {
+    const intent = parseIntent({
       id: crypto.randomUUID(),
       deviceId,
       createdAt: toIso(now - minutesAgo * 60_000),
       ...input,
-    } as Intent);
+    });
+    intents.push(intent);
+    return intent.id;
+  };
   const today = watchDate(now);
 
   add(300, { type: "boat.hoursBase", data: { boat: "78-1", minutes: 12_540, since: shiftDate(today, -14) } });
@@ -45,5 +59,19 @@ export function demoSeed(now: number, deviceId: string): Intent[] {
   add(96, { type: "boat.motorOff", data: { boat: "78-2", station: "hw" } });
   add(60, { type: "radio.append", data: { from: "9-15", to: "AD", text: "Freiwache zum Strand" } });
   add(34, { type: "boat.motorOn", data: { boat: "78-1", purpose: "Kontrollfahrt" } });
+
+  // Laufender Einsatz vor 9-14 mit Boot, Turm und Kräften der Hauptwache.
+  const incident = add(14, {
+    type: "incident.open",
+    data: {
+      title: "9-14",
+      note: "Person treibt ab, ca. 80 m vor der Buhne",
+      point: offset(stationPoint("9-14"), 180, seaBearing() - 20),
+    },
+  });
+  add(13, { type: "incident.assign", data: { incident, resource: { kind: "tower", station: "9-14" } } });
+  const boat = add(12, { type: "incident.assign", data: { incident, resource: { kind: "boat", boat: "78-3" } } });
+  add(11, { type: "incident.assign", data: { incident, resource: { kind: "team", count: 2 } } });
+  add(7, { type: "incident.event", data: { incident, resource: boat, event: "Eintreffen Einsatzstelle" } });
   return intents;
 }

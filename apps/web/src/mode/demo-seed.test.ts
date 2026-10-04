@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boatStatuses, replay } from "@els/domain";
+import { activeIncidents, boatStatuses, replay } from "@els/domain";
 import { demoSeed } from "./demo-seed";
 
 describe("Demo-Daten", () => {
@@ -10,6 +10,8 @@ describe("Demo-Daten", () => {
       expect(rejected).toEqual([]);
       expect(boatStatuses(state)["78-1"].running?.purpose).toBe("Kontrollfahrt");
       expect(boatStatuses(state)["78-2"].station).toBe("hw");
+      expect(activeIncidents(state)[0]?.resources).toHaveLength(3);
+      expect(boatStatuses(state)["78-3"].running?.purpose).toBe("Einsatzfahrt");
     }
   });
 });

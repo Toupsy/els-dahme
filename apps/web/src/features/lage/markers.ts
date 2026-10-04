@@ -7,6 +7,7 @@ import {
   runningPosition,
   stationPoint,
   type BoatStatus,
+  type Incident,
   type BoatId,
   type State,
   type StationId,
@@ -71,4 +72,23 @@ export function boatMarkers(boats: Record<BoatId, BoatStatus>): { markers: MapMa
         });
     });
   return { markers, lines };
+}
+
+/** Aktive Einsätze mit gestrichelter Anfahrtslinie von der Hauptwache. */
+export function incidentMarkers(incidents: Incident[]): { markers: MapMarker[]; lines: MapLine[] } {
+  return {
+    markers: incidents.map((i) => ({
+      key: `incident:${i.id}`,
+      point: i.point,
+      html: `<span class="pin-label">E${i.number}</span>`,
+      className: "incident",
+      size: [40, 40],
+      zIndex: 400,
+    })),
+    lines: incidents.map((i) => ({
+      key: `route:${i.id}`,
+      points: [stationPoint("hw"), i.point],
+      className: "hq-route",
+    })),
+  };
 }

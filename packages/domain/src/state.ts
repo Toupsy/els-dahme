@@ -1,3 +1,4 @@
+import type { Incident } from "./incidents";
 import type { FLAGS } from "./intents";
 import { BOAT_IDS, MAP_DEFAULTS, STATION_IDS, type BoatId, type StationId } from "./stations";
 
@@ -55,6 +56,7 @@ export type State = {
   crew: CrewEntry[];
   towers: Record<StationId, TowerState>;
   boats: Record<BoatId, BoatFacts>;
+  incidents: Record<string, Incident>;
   settings: Settings;
 };
 
@@ -69,6 +71,7 @@ export function initialState(): State {
         { inService: true, hoursBase: { minutes: 0, since: null }, moves: [], serviceAt: null },
       ]),
     ) as State["boats"],
+    incidents: {},
     settings: { mapBearing: MAP_DEFAULTS.bearing },
   };
 }
@@ -81,6 +84,7 @@ export function cloneState(state: State): State {
     crew: state.crew.slice(),
     towers: { ...state.towers },
     boats: { ...state.boats },
+    incidents: { ...state.incidents },
     settings: { ...state.settings },
   };
 }

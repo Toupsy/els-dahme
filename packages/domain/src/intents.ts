@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BOAT_PURPOSES } from "./funk";
+import { INCIDENT_EVENTS, INCIDENT_KINDS, INCIDENT_OUTCOMES } from "./incidents";
 import { BOAT_IDS, STATION_IDS, type StationId } from "./stations";
 import { isUtcTimestamp } from "./time";
 
@@ -69,6 +70,52 @@ export const boatCrewIntent = intent(
   z.object({ boat, date, bootsfuehrer: personName, bootsgast: personName }),
 );
 
+const incidentId = z.uuid();
+const point = z.object({ lat: z.number().min(53).max(56), lng: z.number().min(9).max(13) });
+export const incidentOpenIntent = intent(
+  "incident.open",
+  z.object({ title: z.string().trim().max(120).default(""), note: z.string().trim().max(1000).default(""), point }),
+);
+export const incidentAssignIntent = intent(
+  "incident.assign",
+  z.object({
+    incident: incidentId,
+    resource: z.discriminatedUnion("kind", [
+      z.object({ kind: z.literal("boat"), boat }),
+      z.object({ kind: z.literal("tower"), station }),
+      z.object({ kind: z.literal("team"), count: z.number().int().min(1).max(30) }),
+    ]),
+  }),
+);
+export const incidentReleaseIntent = intent(
+  "incident.release",
+  z.object({ incident: incidentId, resource: z.string().min(1).max(80) }),
+);
+export const incidentEventIntent = intent(
+  "incident.event",
+  z.object({
+    incident: incidentId,
+    resource: z.string().min(1).max(80).nullable().default(null),
+    event: z.enum(INCIDENT_EVENTS),
+  }),
+);
+export const incidentNoteIntent = intent(
+  "incident.note",
+  z.object({ incident: incidentId, text: z.string().trim().min(1).max(1000) }),
+);
+export const incidentCloseIntent = intent(
+  "incident.close",
+  z.object({
+    incident: incidentId,
+    head: z.object({
+      kind: z.enum(INCIDENT_KINDS),
+      outcome: z.enum(INCIDENT_OUTCOMES),
+      persons: z.number().int().min(0).max(99),
+      remark: z.string().trim().max(1000).default(""),
+    }),
+  }),
+);
+
 export const intentSchema = z.discriminatedUnion("type", [
   radioAppendIntent,
   radioCorrectIntent,
@@ -83,6 +130,12 @@ export const intentSchema = z.discriminatedUnion("type", [
   boatStationIntent,
   boatHoursBaseIntent,
   boatCrewIntent,
+  incidentOpenIntent,
+  incidentAssignIntent,
+  incidentReleaseIntent,
+  incidentEventIntent,
+  incidentNoteIntent,
+  incidentCloseIntent,
 ]);
 
 export type Intent = z.infer<typeof intentSchema>;

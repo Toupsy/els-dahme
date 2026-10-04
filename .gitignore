@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist-preview/
+coverage/
+playwright-report/
+test-results/
+.wrangler/
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+data/

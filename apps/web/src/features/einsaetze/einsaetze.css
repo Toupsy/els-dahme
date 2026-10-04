@@ -1,0 +1,58 @@
+.incident-card.active {
+  border-left: 6px solid var(--bad);
+}
+.incident header h2 {
+  margin: 0;
+}
+.incident header p {
+  margin: 4px 0;
+}
+.incident .head {
+  font-weight: 600;
+}
+.resource {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.timeline {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.timeline li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.timeline .time {
+  display: inline-block;
+  width: 52px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.incident-form label,
+.close-form label {
+  display: grid;
+  gap: 4px;
+}
+.close-form .wide {
+  flex-basis: 100%;
+}
+.grow {
+  flex: 1;
+  min-width: 200px;
+}
+.map-pin.incident {
+  background: var(--bad);
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+.hq-route {
+  stroke: var(--bad);
+  stroke-width: 3;
+  stroke-dasharray: 4 8;
+  fill: none;
+}

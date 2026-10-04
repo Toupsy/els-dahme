@@ -35,6 +35,9 @@ export function createLedger(db: Db, log: (message: string) => void = () => {}) 
   const insertRadio = db.prepare(
     "INSERT INTO radio_entries(id, intent_seq, at, sender, recipient, text, correction_of, auto) VALUES(?,?,?,?,?,?,?,?)",
   );
+  const insertCrew = db.prepare(
+    "INSERT INTO crew_entries(id, intent_seq, boat, date, bootsfuehrer, bootsgast, at) VALUES(?,?,?,?,?,?,?)",
+  );
   const selectPage = db.prepare("SELECT seq, body FROM intents WHERE seq > ? ORDER BY seq LIMIT ?");
   const selectHead = db.prepare("SELECT COALESCE(MAX(seq), 0) AS head FROM intents");
 
@@ -60,6 +63,8 @@ export function createLedger(db: Db, log: (message: string) => void = () => {}) 
         entry.correctionOf,
         entry.auto ? 1 : 0,
       );
+    for (const c of next.crew.slice(state.crew.length))
+      insertCrew.run(c.id, seq, c.boat, c.date, c.bootsfuehrer, c.bootsgast, c.at);
     return seq;
   });
 

@@ -68,4 +68,12 @@ export const migrations: { version: number; name: string; sql: string }[] = [
       CREATE TRIGGER crew_no_delete BEFORE DELETE ON crew_entries BEGIN SELECT RAISE(ABORT, 'append-only'); END;
     `,
   },
+  {
+    version: 3,
+    name: "sitzung-an-passcode",
+    sql: `
+      -- Sitzungen gelten nur für den Passcode, mit dem sie entstanden sind.
+      ALTER TABLE sessions ADD COLUMN passcode_tag TEXT NOT NULL DEFAULT '';
+    `,
+  },
 ];

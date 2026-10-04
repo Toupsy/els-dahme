@@ -18,9 +18,16 @@ export function registerAuth(app: FastifyInstance, config: Config, db: Db, now: 
   const ttlMs = config.SESSION_TTL_HOURS * 3_600_000;
   const windowMs = config.LOGIN_WINDOW_MINUTES * 60_000;
   const tokenHash = (token: string) => createHmac("sha256", config.SESSION_SECRET).update(token).digest("hex");
+  // Kennung des aktuellen Passcodes: Nach einem Wechsel sind alle alten Sitzungen ungültig.
+  const passcodeTag = createHmac("sha256", config.SESSION_SECRET)
+    .update(config.PASSCODE_HASH)
+    .digest("hex")
+    .slice(0, 16);
 
-  const insertSession = db.prepare("INSERT INTO sessions(token_hash, created_at, expires_at) VALUES(?,?,?)");
-  const findSession = db.prepare("SELECT expires_at FROM sessions WHERE token_hash = ?");
+  const insertSession = db.prepare(
+    "INSERT INTO sessions(token_hash, created_at, expires_at, passcode_tag) VALUES(?,?,?,?)",
+  );
+  const findSession = db.prepare("SELECT expires_at FROM sessions WHERE token_hash = ? AND passcode_tag = ?");
   const deleteSession = db.prepare("DELETE FROM sessions WHERE token_hash = ?");
   const deleteExpired = db.prepare("DELETE FROM sessions WHERE expires_at <= ?");
   const getFailures = db.prepare("SELECT failures, window_start FROM login_failures WHERE ip = ?");
@@ -39,7 +46,7 @@ export function registerAuth(app: FastifyInstance, config: Config, db: Db, now: 
   function currentSession(request: FastifyRequest): { expiresAt: number } | null {
     const token = request.cookies[SESSION_COOKIE];
     if (!token) return null;
-    const row = findSession.get(tokenHash(token)) as { expires_at: number } | undefined;
+    const row = findSession.get(tokenHash(token), passcodeTag) as { expires_at: number } | undefined;
     if (!row || row.expires_at <= now()) return null;
     return { expiresAt: row.expires_at };
   }
@@ -74,7 +81,7 @@ export function registerAuth(app: FastifyInstance, config: Config, db: Db, now: 
     deleteExpired.run(t);
     const token = randomBytes(32).toString("base64url");
     const expiresAt = t + ttlMs;
-    insertSession.run(tokenHash(token), t, expiresAt);
+    insertSession.run(tokenHash(token), t, expiresAt, passcodeTag);
     reply.setCookie(SESSION_COOKIE, token, { ...cookieOptions, expires: new Date(expiresAt) });
     return { expiresAt: new Date(expiresAt).toISOString() };
   });

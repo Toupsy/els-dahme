@@ -1,4 +1,4 @@
-import { toIso, type Intent, type IntentInput, type IntentType } from "@els/domain";
+import { shiftDate, toIso, watchDate, type Intent, type IntentInput, type IntentType } from "@els/domain";
 
 /**
  * Synthetische Beispieldaten für die Vorschau, relativ zu „jetzt“.
@@ -6,15 +6,44 @@ import { toIso, type Intent, type IntentInput, type IntentType } from "@els/doma
  */
 export function demoSeed(now: number, deviceId: string): Intent[] {
   const intents: Intent[] = [];
-  const at = (minutesAgo: number) => toIso(now - minutesAgo * 60_000);
   const add = <T extends IntentType>(minutesAgo: number, input: IntentInput<T>) =>
-    intents.push({ id: crypto.randomUUID(), deviceId, createdAt: at(minutesAgo), ...input } as Intent);
+    intents.push({
+      id: crypto.randomUUID(),
+      deviceId,
+      createdAt: toIso(now - minutesAgo * 60_000),
+      ...input,
+    } as Intent);
+  const today = watchDate(now);
 
-  add(180, { type: "radio.append", data: { from: "AD", to: "Alle", text: "Funkanmeldung, Wachbetrieb aufgenommen" } });
-  add(150, { type: "radio.append", data: { from: "AD", to: "Alle", text: "Einholen Wetterdaten" } });
-  add(148, {
+  add(300, { type: "boat.hoursBase", data: { boat: "78-1", minutes: 12_540, since: shiftDate(today, -14) } });
+  add(300, { type: "boat.hoursBase", data: { boat: "78-2", minutes: 9_870, since: shiftDate(today, -14) } });
+  add(300, { type: "boat.hoursBase", data: { boat: "78-3", minutes: 4_215, since: shiftDate(today, -14) } });
+  add(240, { type: "radio.append", data: { from: "AD", to: "Alle", text: "Funkanmeldung, Wachbetrieb aufgenommen" } });
+  for (const [i, station] of (["9-12", "9-13", "9-14", "9-15", "9-17"] as const).entries())
+    add(235 - i, { type: "tower.rigUp", data: { station } });
+  add(228, { type: "tower.flag", data: { station: "hw", flag: "gelb" } });
+  add(227, { type: "tower.flag", data: { station: "9-14", flag: "gelb" } });
+  add(226, { type: "tower.flag", data: { station: "9-13", flag: "gelb_windsack" } });
+  add(225, {
+    type: "boat.crew",
+    data: { boat: "78-1", date: today, bootsfuehrer: "Mara Muster", bootsgast: "Finn Beispiel" },
+  });
+  add(225, {
+    type: "boat.crew",
+    data: { boat: "78-2", date: today, bootsfuehrer: "Lea Demo", bootsgast: "Jonas Probe" },
+  });
+  add(210, { type: "radio.append", data: { from: "AD", to: "Alle", text: "Einholen Wetterdaten" } });
+  add(208, {
     type: "radio.append",
     data: { from: "AD", to: "Alle", text: "Wasser: 19°C, Luft: 23°C, Wind: SW 3, Luftdruck: 1016 hPa" },
   });
+  add(200, { type: "boat.motorOn", data: { boat: "78-1", purpose: "Kontrollfahrt" } });
+  add(163, { type: "boat.motorOff", data: { boat: "78-1" } });
+  add(150, { type: "boat.motorOn", data: { boat: "78-2", purpose: "Ausbildungsfahrt" } });
+  add(121, { type: "boat.switch", data: { boat: "78-2", purpose: "Einsatzfahrt" } });
+  add(118, { type: "radio.append", data: { from: "78-2", to: "AD", text: "Eintreffen Einsatzstelle" } });
+  add(96, { type: "boat.motorOff", data: { boat: "78-2", station: "hw" } });
+  add(60, { type: "radio.append", data: { from: "9-15", to: "AD", text: "Freiwache zum Strand" } });
+  add(34, { type: "boat.motorOn", data: { boat: "78-1", purpose: "Kontrollfahrt" } });
   return intents;
 }

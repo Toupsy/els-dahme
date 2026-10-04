@@ -27,6 +27,26 @@ test("Demo: Boot starten, Reload, zurücksetzen", async ({ page }) => {
   await expect(page.getByTestId("boat-78-2")).toContainText("Motor aus · E-klar HW");
 });
 
+test("Demo: Lage mit Funktagebuch und Notizen, Turm im Popup", async ({ page }) => {
+  await page.goto("/#/lage");
+  const panel = page.locator(".lage-panel");
+  await panel.getByLabel("Nachricht").fill("Lage-Test Funkspruch");
+  await panel.getByRole("button", { name: "Eintragen" }).click();
+  await expect(page.getByTestId("lage-radio-log")).toContainText("Lage-Test Funkspruch");
+
+  await page.getByLabel("Notizen").fill("Notiz bleibt");
+  await page.reload();
+  await expect(page.getByLabel("Notizen")).toHaveValue("Notiz bleibt");
+
+  await page.locator(".map-pin.tower", { hasText: "9-15" }).click();
+  const popup = page.getByRole("dialog", { name: "Turm 9-15" });
+  await expect(popup.getByRole("heading", { name: "Turm 9-15" })).toBeVisible();
+  await popup.getByRole("button", { name: /^(Aufrödeln|Abrödeln)$/ }).click();
+  await expect(page.getByTestId("lage-radio-log")).toContainText("9-15");
+  await page.keyboard.press("Escape");
+  await expect(popup).toHaveCount(0);
+});
+
 test("Demo: alle API-Aufrufe enden mit 503", async ({ request }) => {
   expect((await request.get("/api/sync/pull")).status()).toBe(503);
 });

@@ -1,16 +1,7 @@
 .lage {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   height: 100%;
-}
-@media (max-width: 900px) {
-  .lage {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-  }
-  .lage-panel {
-    max-height: 45vh;
-  }
 }
 .lage-map {
   position: relative;
@@ -35,16 +26,107 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .lage-panel {
-  position: relative;
-  overflow: auto;
-  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
   background: var(--card);
   border-left: 1px solid var(--line);
 }
-.lage-panel .close {
+
+/* Funktagebuch und Notizen neben der Karte */
+.funk-panel {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(150px, 32%);
+  height: 100%;
+}
+.funk-panel section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 16px;
+}
+.funk-panel h2 {
+  margin: 0;
+}
+.funk-panel-notes {
+  border-top: 1px solid var(--line);
+}
+.funk-panel-notes textarea {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+}
+.funk-panel-notes .hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.radio-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+.radio-log li {
+  display: grid;
+  grid-template-columns: 44px auto 1fr;
+  gap: 4px 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.radio-log li:last-child {
+  border-bottom: 0;
+}
+.radio-log li.empty {
+  display: block;
+}
+.radio-log .time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.radio-log .calls {
+  color: var(--dim);
+  white-space: nowrap;
+}
+.radio-log li.auto .text {
+  color: var(--dim);
+}
+
+/* Popup für Turm, Boot und Einsatz */
+.popup {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.popup::backdrop {
+  background: rgba(10, 20, 30, 0.45);
+}
+.popup-body {
+  position: relative;
+  padding: 18px 20px 20px;
+}
+.popup-body > .close {
   position: absolute;
   top: 10px;
   right: 10px;
+}
+.popup-body h2 {
+  padding-right: 56px;
 }
 
 .leaflet-marker-icon.map-pin {
@@ -149,30 +231,6 @@
 .status-line.ok {
   color: var(--ok);
 }
-.list-button {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-height: var(--tap);
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.list-button span {
-  margin-left: auto;
-  color: var(--dim);
-}
-.list-button.incident {
-  border-left: 5px solid var(--bad);
-}
-.list-button.running {
-  border-left: 5px solid var(--run);
-}
 .map-pin .count {
   position: absolute;
   bottom: -9px;
@@ -187,4 +245,27 @@
   line-height: 18px;
   text-align: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Schmale Geräte: Karte oben, Panel darunter und als Ganzes scrollbar */
+@media (max-width: 900px) {
+  .lage {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 45vh;
+  }
+  .lage-panel {
+    overflow: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .funk-panel {
+    display: block;
+    height: auto;
+  }
+  .radio-log {
+    max-height: 240px;
+  }
+  .funk-panel-notes textarea {
+    min-height: 120px;
+  }
 }

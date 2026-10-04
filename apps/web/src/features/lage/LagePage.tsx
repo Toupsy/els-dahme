@@ -15,9 +15,10 @@ import { useLedger, useNow } from "../../core/runtime";
 import { BoatActions } from "../boote/BoatActions";
 import { IncidentDetail } from "../einsaetze/IncidentDetail";
 import { IncidentForm } from "../einsaetze/IncidentForm";
+import { Dialog } from "./Dialog";
+import { FunkPanel } from "./FunkPanel";
 import { MapView } from "./MapView";
 import { boatMarkers, incidentMarkers, stationMarkers } from "./markers";
-import { Overview } from "./Overview";
 import { StationPanel } from "./StationPanel";
 
 export type Selection =
@@ -27,7 +28,10 @@ export type Selection =
   | { kind: "new"; point: Point }
   | null;
 
-/** #/lage, #/lage/einsatz (Tippen auf die Karte eröffnet einen Einsatz) */
+/**
+ * #/lage, #/lage/einsatz (Tippen auf die Karte eröffnet einen Einsatz).
+ * Turm, Boot oder Einsatz öffnen ein Popup; daneben stehen Funktagebuch und Notizen.
+ */
 export function LagePage({ rest }: { rest: string[] }) {
   const { state } = useLedger();
   const [selection, setSelection] = useState<Selection>(null);
@@ -83,24 +87,29 @@ export function LagePage({ rest }: { rest: string[] }) {
         </div>
       </div>
       <aside className="lage-panel">
-        {selection && (
-          <button className="btn close" onClick={() => setSelection(null)} aria-label="Auswahl schließen">
-            ✕
-          </button>
-        )}
-        {selection?.kind === "station" && <StationPanel id={selection.id} />}
-        {selection?.kind === "boat" && (
-          <div className="stack-tight">
-            <h2>Boot {selection.id}</h2>
-            <BoatActions boat={boats[selection.id]} />
-          </div>
-        )}
-        {selection?.kind === "new" && (
-          <IncidentForm point={selection.point} onDone={(id) => setSelection(id ? { kind: "incident", id } : null)} />
-        )}
-        {incident && <IncidentDetail incident={incident} />}
-        {!selection && <Overview onSelect={setSelection} />}
+        <FunkPanel />
       </aside>
+      {selection && (
+        <Dialog label={dialogLabel(selection)} onClose={() => setSelection(null)}>
+          {selection.kind === "station" && <StationPanel id={selection.id} />}
+          {selection.kind === "boat" && (
+            <div className="stack-tight">
+              <h2>Boot {selection.id}</h2>
+              <BoatActions boat={boats[selection.id]} />
+            </div>
+          )}
+          {selection.kind === "new" && (
+            <IncidentForm point={selection.point} onDone={(id) => setSelection(id ? { kind: "incident", id } : null)} />
+          )}
+          {incident && <IncidentDetail incident={incident} />}
+        </Dialog>
+      )}
     </div>
   );
+}
+
+function dialogLabel(selection: NonNullable<Selection>): string {
+  if (selection.kind === "station") return selection.id === "hw" ? "Hauptwache" : `Turm ${selection.id}`;
+  if (selection.kind === "boat") return `Boot ${selection.id}`;
+  return "Einsatz";
 }

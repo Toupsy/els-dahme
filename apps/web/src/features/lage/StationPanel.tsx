@@ -1,5 +1,7 @@
-import { FLAGS, FLAG_LABELS, STATIONS, type StationId } from "@els/domain";
-import { useDispatch, useLedger } from "../../core/runtime";
+import { FLAGS, FLAG_LABELS, STATIONS, occupancy, watchDate, type StationId } from "@els/domain";
+import "../personal/personal.css";
+import { useDispatch, useLedger, useNow } from "../../core/runtime";
+import { PersonRow } from "../personal/PersonRow";
 
 /** Turm bzw. Hauptwache: Auf-/Abrödeln und Flagge. */
 export function StationPanel({ id }: { id: StationId }) {
@@ -7,6 +9,8 @@ export function StationPanel({ id }: { id: StationId }) {
   const { dispatch, error } = useDispatch();
   const tower = state.towers[id];
   const isHq = id === "hw";
+  const today = watchDate(useNow(60_000));
+  const present = occupancy(state, today)[id];
 
   return (
     <div className="stack-tight">
@@ -50,6 +54,13 @@ export function StationPanel({ id }: { id: StationId }) {
           </div>
         </>
       )}
+      <h3>Besetzung ({present.length})</h3>
+      {present.length === 0 && <p className="empty">Laut Wachplan niemand anwesend.</p>}
+      <ul className="plain">
+        {present.map((p) => (
+          <PersonRow key={p.id} person={p} date={today} />
+        ))}
+      </ul>
       {error && <p className="error">{error}</p>}
     </div>
   );

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { applyIntent, type AcceptedIntent } from "@els/domain";
+import { applyIntent, watchDate, type AcceptedIntent } from "@els/domain";
 import { Ledger, errorMessage } from "../core/ledger";
 import type { Bootstrap, Runtime } from "../core/runtime";
-import { demoSeed } from "./demo-seed";
+import { demoRosterCsv, demoSeed } from "./demo-seed";
 
 const DB_NAME = "els-demo";
 const DEMO_STATUS = { kind: "demo" } as const;
@@ -48,6 +48,7 @@ export const bootstrap: Bootstrap = async () => {
     status: () => DEMO_STATUS,
     subscribeStatus: () => () => {},
     kick: () => void confirm(),
+    sampleRosterCsv: () => demoRosterCsv(watchDate(Date.now())),
     async resetDemo() {
       await ledger.destroy();
       ledger = await Ledger.open(DB_NAME);

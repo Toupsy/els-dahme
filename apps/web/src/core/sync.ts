@@ -1,8 +1,22 @@
-import { PUSH_LIMIT, pullResponseSchema, pushResultSchema } from "@els/domain";
+import { PUSH_LIMIT, pullResponseSchema, pushResultSchema, type Intent } from "@els/domain";
 import type { Ledger } from "./ledger";
 import type { SyncStatus } from "./runtime";
 
 export class SessionExpired extends Error {}
+
+/** Höchstens 100 Aktionen und etwa 1 MB je Push (ein Wachplan-Tag kann groß sein). */
+const PUSH_BYTES = 1_000_000;
+export function nextBatch(pending: readonly Intent[]): Intent[] {
+  const batch: Intent[] = [];
+  let bytes = 0;
+  for (const intent of pending.slice(0, PUSH_LIMIT)) {
+    const size = JSON.stringify(intent).length;
+    if (batch.length && bytes + size > PUSH_BYTES) break;
+    batch.push(intent);
+    bytes += size;
+  }
+  return batch;
+}
 class Conflict extends Error {}
 
 /** Abweichung der Geräteuhr gegenüber dem Server (HTTP-Date), damit Funkzeiten stimmen. */
@@ -45,7 +59,7 @@ export function createSync(ledger: Ledger) {
   };
 
   async function push() {
-    let batch = ledger.pendingIntents.slice(0, PUSH_LIMIT);
+    let batch = nextBatch(ledger.pendingIntents);
     while (batch.length) {
       const result = pushResultSchema.parse(await api("/api/sync/push", { intents: batch }));
       await ledger.reject(
@@ -55,7 +69,7 @@ export function createSync(ledger: Ledger) {
       );
       if (result.failed.some((f) => f.code === "SERVER_ERROR")) throw new Error("Server konnte nicht alles speichern.");
       await pull();
-      const next = ledger.pendingIntents.slice(0, PUSH_LIMIT);
+      const next = nextBatch(ledger.pendingIntents);
       if (next.length && next[0]!.id === batch[0]!.id) break;
       batch = next;
     }

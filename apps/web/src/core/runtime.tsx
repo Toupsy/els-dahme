@@ -21,6 +21,8 @@ export interface Runtime {
   /** Nach jeder neuen Aktion: Demo bestätigt lokal, Live sendet an den Server. */
   kick(): void;
   logout?(): Promise<void>;
+  /** Nur Live: Ablauf der Anmeldung (UTC). */
+  sessionExpiresAt?(): string | undefined;
   resetDemo?(): Promise<void>;
   /** Nur Demo: Beispieldatei für den Wachplan-Import. */
   sampleRosterCsv?(): string;

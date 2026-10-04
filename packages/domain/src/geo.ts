@@ -5,13 +5,13 @@ export type Point = { lat: number; lng: number };
 const EARTH_RADIUS_M = 6_371_008.8;
 export const GEO = {
   /** Ruhendes Boot: seewärts neben dem Turm. */
-  mooringOffsetM: 60,
+  mooringOffsetM: 110,
   /** Vor der Hauptwache liegt das Boot weiter draußen. */
-  hqMooringOffsetM: 120,
+  hqMooringOffsetM: 160,
   /** Fahrendes Boot: hinter der Seebrücke. */
-  runningOffsetM: 280,
+  runningOffsetM: 300,
   /** Abstand mehrerer Boote am selben Liegeplatz (entlang der Küste). */
-  fanM: 70,
+  fanM: 90,
   /** Punkte mehr als 40 m seewärts der Küstenlinie gelten als Wasser. */
   waterThresholdM: 40,
 } as const;

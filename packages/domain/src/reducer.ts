@@ -1,6 +1,8 @@
 import { DomainError, fail } from "./errors";
 import { intentSchema, type Intent, type IntentOf, type IntentType } from "./intents";
+import { motorOff, motorOn, recordCrew, setHoursBase, setService, setStation, switchTrip } from "./boats";
 import { appendRadio, assertCorrectable } from "./radio";
+import { rigDown, rigUp, setFlag } from "./towers";
 import { cloneState, initialState, type State } from "./state";
 
 type Handler<T extends IntentType> = (draft: State, intent: IntentOf<T>) => void;
@@ -21,6 +23,16 @@ const handlers: Handlers = {
   "settings.update": (draft, intent) => {
     draft.settings = { ...draft.settings, ...intent.data };
   },
+  "tower.rigUp": rigUp,
+  "tower.rigDown": rigDown,
+  "tower.flag": setFlag,
+  "boat.motorOn": motorOn,
+  "boat.switch": switchTrip,
+  "boat.motorOff": motorOff,
+  "boat.service": setService,
+  "boat.station": setStation,
+  "boat.hoursBase": setHoursBase,
+  "boat.crew": recordCrew,
 };
 
 /** Prüft die Form einer Aktion und entfernt unbekannte Felder. */

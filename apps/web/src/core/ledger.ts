@@ -2,6 +2,7 @@ import {
   DomainError,
   applyIntent,
   initialState,
+  parseIntent,
   replay,
   toIso,
   type AcceptedIntent,
@@ -106,13 +107,13 @@ export class Ledger {
 
   /** Erzeugt eine Aktion, prüft sie gegen den aktuellen Stand und legt sie in die Outbox. */
   async dispatch<T extends IntentType>(input: IntentInput<T>): Promise<Intent> {
-    const intent = {
+    const intent = parseIntent({
       id: crypto.randomUUID(),
       deviceId: this.deviceId,
       createdAt: toIso(this.now()),
       type: input.type,
       data: input.data,
-    } as Intent;
+    });
     applyIntent(this.snapshot.state, intent); // wirft DomainError mit verständlicher Meldung
     const tx = this.db.transaction("outbox", "readwrite");
     const order = await request(tx.objectStore("outbox").add({ intent }));

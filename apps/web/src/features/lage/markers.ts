@@ -23,7 +23,8 @@ const FLAG_CLASS: Record<string, string> = {
   rot: "flag-rot",
 };
 
-export function stationMarkers(state: State): MapMarker[] {
+/** Türme und HW; `counts` = anwesende Personen laut Wachplan. */
+export function stationMarkers(state: State, counts: Partial<Record<StationId, number>> = {}): MapMarker[] {
   return STATION_IDS.map((id) => {
     const tower = state.towers[id];
     const flag = tower.flag
@@ -32,7 +33,7 @@ export function stationMarkers(state: State): MapMarker[] {
     return {
       key: `station:${id}`,
       point: stationPoint(id),
-      html: `<span class="pin-label">${esc(STATIONS[id].label)}</span>${flag}`,
+      html: `<span class="pin-label">${esc(STATIONS[id].label)}</span>${counts[id] ? `<b class="count">${counts[id]}</b>` : ""}${flag}`,
       className: id === "hw" ? "hq" : tower.open ? "tower open" : "tower closed",
       size: id === "hw" ? [52, 34] : [46, 30],
       zIndex: 100,

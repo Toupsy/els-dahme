@@ -22,6 +22,8 @@ export interface Runtime {
   kick(): void;
   logout?(): Promise<void>;
   resetDemo?(): Promise<void>;
+  /** Nur Demo: Beispieldatei für den Wachplan-Import. */
+  sampleRosterCsv?(): string;
 }
 
 /** Einstieg je Betriebsart (src/mode/live.tsx bzw. src/mode/demo.tsx). */

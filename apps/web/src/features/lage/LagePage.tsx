@@ -1,9 +1,17 @@
 import "./lage.css";
 import "../einsaetze/einsaetze.css";
 import { useMemo, useState } from "react";
-import { activeIncidents, boatStatuses, type BoatId, type Point, type StationId } from "@els/domain";
+import {
+  activeIncidents,
+  boatStatuses,
+  occupancy,
+  watchDate,
+  type BoatId,
+  type Point,
+  type StationId,
+} from "@els/domain";
 import { go } from "../../core/route";
-import { useLedger } from "../../core/runtime";
+import { useLedger, useNow } from "../../core/runtime";
 import { BoatActions } from "../boote/BoatActions";
 import { IncidentDetail } from "../einsaetze/IncidentDetail";
 import { IncidentForm } from "../einsaetze/IncidentForm";
@@ -27,12 +35,15 @@ export function LagePage({ rest }: { rest: string[] }) {
   const pressMode = rest[0] === "einsatz";
   const boats = boatStatuses(state);
   const incidents = activeIncidents(state);
+  const today = watchDate(useNow(60_000));
 
   const { markers, lines } = useMemo(() => {
     const b = boatMarkers(boats);
     const i = incidentMarkers(incidents);
-    return { markers: [...stationMarkers(state), ...b.markers, ...i.markers], lines: [...b.lines, ...i.lines] };
-  }, [state, boats, incidents]);
+    const present = occupancy(state, today);
+    const counts = Object.fromEntries(Object.entries(present).map(([id, people]) => [id, people.length]));
+    return { markers: [...stationMarkers(state, counts), ...b.markers, ...i.markers], lines: [...b.lines, ...i.lines] };
+  }, [state, boats, incidents, today]);
 
   function select(key: string) {
     const [kind, id] = key.split(":") as [string, string];

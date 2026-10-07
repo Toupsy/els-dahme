@@ -72,13 +72,6 @@ test("Demo: Lage mit Funktagebuch und Notizen, Turm im Popup", async ({ page }) 
   await page.locator(".map-pin.tower", { hasText: "9-15" }).click();
   const popup = page.getByRole("dialog", { name: "Turm 9-15" });
   await expect(popup.getByRole("heading", { name: "Turm 9-15" })).toBeVisible();
-  const pin = page.locator(".map-pin.tower", { hasText: "9-15" });
-  await expect(pin).toHaveClass(/short/);
-  await popup.getByRole("button", { name: "Wieder vollzählig" }).click();
-  await expect(pin).not.toHaveClass(/short/);
-  await popup.getByRole("button", { name: "−1 Person" }).click();
-  await expect(pin).toHaveClass(/short/);
-  await expect(pin.locator(".short-badge")).toHaveText("−1");
   await popup.getByRole("button", { name: /^(Aufrödeln|Abrödeln)$/ }).click();
   await expect(page.getByTestId("lage-radio-log")).toContainText("9-15");
   await page.keyboard.press("Escape");

@@ -3,14 +3,11 @@ import {
   buildRoster,
   detectDelimiter,
   dutyRoster,
-  isShort,
   occupancy,
   parseDelimited,
   parsePlanDay,
   planTarget,
   readRosterFile,
-  shiftDate,
-  stationStrength,
 } from "../src";
 import { run } from "./helpers";
 import { zip } from "./zip-helper";
@@ -132,28 +129,6 @@ describe("Besetzung", () => {
     expect(() =>
       run([[T("08:07"), { type: "person.move", data: { date: day.date, person: "unbekannt", station: "hw" } }]], state),
     ).toThrow(/nicht im Wachplan/);
-  });
-
-  it("„−1“ zieht eine Person ab, ohne Namen, und gilt nur für den Tag", () => {
-    const short = run(
-      [[T("08:00"), { type: "station.short", data: { date: day.date, station: "9-14", short: true } }]],
-      base,
-    );
-    expect(stationStrength(short, day.date)["9-14"]).toEqual({ count: 1, short: true });
-    expect(stationStrength(short, day.date)["9-12"]).toEqual({ count: 1, short: false });
-    expect(occupancy(short, day.date)["9-14"]).toHaveLength(2);
-    expect(isShort(short, shiftDate(day.date, 1), "9-14")).toBe(false);
-    expect(() =>
-      run([[T("08:01"), { type: "station.short", data: { date: day.date, station: "9-14", short: true } }]], short),
-    ).toThrow(/bereits mit einer Person weniger/);
-    const full = run(
-      [[T("09:00"), { type: "station.short", data: { date: day.date, station: "9-14", short: false } }]],
-      short,
-    );
-    expect(stationStrength(full, day.date)["9-14"]).toEqual({ count: 2, short: false });
-    expect(() =>
-      run([[T("09:01"), { type: "station.short", data: { date: day.date, station: "9-14", short: false } }]], full),
-    ).toThrow(/bereits vollzählig/);
   });
 
   it("Neuer Plan für den Tag ersetzt den alten und verwirft Änderungen zu entfallenen Personen", () => {

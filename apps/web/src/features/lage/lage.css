@@ -261,20 +261,6 @@
 .status-line.ok {
   color: var(--ok);
 }
-.status-line.short {
-  color: var(--warn);
-}
-.btn.short {
-  background: #f07c00;
-  border-color: #f07c00;
-  color: #fff;
-}
-.names li {
-  padding: 4px 0;
-}
-.names small {
-  color: var(--dim);
-}
 .map-pin .crew {
   display: flex;
   align-items: center;
@@ -287,21 +273,6 @@
   width: 11px;
   height: 11px;
   fill: currentColor;
-}
-.map-pin.short {
-  outline: 3px solid #f07c00;
-}
-.map-pin .short-badge {
-  position: absolute;
-  bottom: -10px;
-  right: -12px;
-  padding: 0 4px;
-  border-radius: 9px;
-  background: #f07c00;
-  color: #fff;
-  font-size: 11px;
-  line-height: 18px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .map-pin .crew.empty {
   padding: 0 4px;

@@ -1,6 +1,6 @@
 import "./personal.css";
 import { useState } from "react";
-import { COAST_ORDER, dutyRoster, occupancy, stationStrength, stationTitle, watchDate } from "@els/domain";
+import { COAST_ORDER, dutyRoster, occupancy, stationTitle, watchDate } from "@els/domain";
 import { DayBar } from "../../components/DayBar";
 import { useLedger, useRuntime } from "../../core/runtime";
 import { ImportPanel } from "./ImportPanel";
@@ -14,7 +14,6 @@ export function PersonalPage() {
   const [importing, setImporting] = useState(false);
   const people = dutyRoster(state, date);
   const present = occupancy(state, date);
-  const strength = stationStrength(state, date);
   const away = people.filter((p) => p.away);
   const onTrip = people.filter((p) => p.onTrip && !p.away);
 
@@ -34,11 +33,7 @@ export function PersonalPage() {
           {COAST_ORDER.map((id) => (
             <section key={id} className="card">
               <h2>
-                {stationTitle(id)}{" "}
-                <span className={strength[id].short ? "count short" : "count"}>
-                  {strength[id].count}
-                  {strength[id].short && " (−1)"}
-                </span>
+                {stationTitle(id)} <span className="count">{present[id].length}</span>
               </h2>
               {id !== "hw" && <p className="hint">{state.towers[id].open ? "Aufgerödelt" : "Nicht aufgerödelt"}</p>}
               <ul className="plain">

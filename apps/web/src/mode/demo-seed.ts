@@ -59,7 +59,6 @@ export function demoSeed(now: number, deviceId: string): Intent[] {
   add(118, { type: "radio.append", data: { from: "78-2", to: "AD", text: "Eintreffen Einsatzstelle" } });
   add(96, { type: "boat.motorOff", data: { boat: "78-2", station: "hw" } });
   add(60, { type: "radio.append", data: { from: "9-15", to: "AD", text: "Freiwache zum Strand" } });
-  add(59, { type: "station.short", data: { date: today, station: "9-15", short: true } });
   add(34, { type: "boat.motorOn", data: { boat: "78-1", purpose: "Kontrollfahrt" } });
 
   // Laufender Einsatz vor 9-14 mit Boot, Turm und Kräften der Hauptwache.

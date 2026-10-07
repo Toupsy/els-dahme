@@ -21,12 +21,12 @@ Der Reducer `applyIntent(state, intent)` prüft zuerst und ändert danach. Ein F
 
 **Gespeichert werden nur Fakten.** Abgeleitete Werte werden bei Bedarf berechnet:
 
-| Wert                     | berechnet aus                                                |
-| ------------------------ | ------------------------------------------------------------ |
-| Bootsstatus, Liegeplatz  | gültigen Funksprüchen des Boots (`deriveBoat`)               |
-| Fahrten, Betriebsstunden | „Motor läuft/aus“-Funksprüchen (`boatlog.ts`)                |
-| Besetzung der Stationen  | Wachplan des Tages + Umsetzen/Abwesend/„−1“ (`personnel.ts`) |
-| Boot im Einsatz          | Zuordnungen der aktiven Einsätze                             |
+| Wert                     | berechnet aus                                           |
+| ------------------------ | ------------------------------------------------------- |
+| Bootsstatus, Liegeplatz  | gültigen Funksprüchen des Boots (`deriveBoat`)          |
+| Fahrten, Betriebsstunden | „Motor läuft/aus“-Funksprüchen (`boatlog.ts`)           |
+| Besetzung der Stationen  | Wachplan des Tages + Umsetzen/Abwesend (`personnel.ts`) |
+| Boot im Einsatz          | Zuordnungen der aktiven Einsätze                        |
 
 Eine Korrektur im Funkbuch wirkt deshalb sofort auf Fahrten und Betriebsstunden. Die Rechnung des Bootstagebuchs entspricht der Feature-App; die Referenzwerte stehen in `packages/domain/reference/`.
 

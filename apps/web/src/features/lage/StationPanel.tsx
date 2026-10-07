@@ -1,16 +1,9 @@
-import {
-  FLAGS,
-  FLAG_LABELS,
-  ROSTER_ROLE_LABELS,
-  STATIONS,
-  occupancy,
-  stationStrength,
-  watchDate,
-  type StationId,
-} from "@els/domain";
+import { FLAGS, FLAG_LABELS, STATIONS, occupancy, watchDate, type StationId } from "@els/domain";
+import "../personal/personal.css";
 import { useDispatch, useLedger, useNow } from "../../core/runtime";
+import { PersonRow } from "../personal/PersonRow";
 
-/** Turm bzw. Hauptwache: Auf-/Abrödeln, Flagge und „−1“, wenn eine Person fehlt. */
+/** Turm bzw. Hauptwache: Auf-/Abrödeln und Flagge. */
 export function StationPanel({ id }: { id: StationId }) {
   const { state } = useLedger();
   const { dispatch, error } = useDispatch();
@@ -18,7 +11,6 @@ export function StationPanel({ id }: { id: StationId }) {
   const isHq = id === "hw";
   const today = watchDate(useNow(60_000));
   const present = occupancy(state, today)[id];
-  const { count, short } = stationStrength(state, today)[id];
 
   return (
     <div className="stack-tight">
@@ -62,26 +54,11 @@ export function StationPanel({ id }: { id: StationId }) {
           </div>
         </>
       )}
-      <h3>
-        Besetzung ({count}
-        {short && ` von ${present.length}`})
-      </h3>
-      {short && <p className="status-line short">Eine Person weniger besetzt</p>}
-      {(present.length > 0 || short) && (
-        <button
-          className={short ? "btn big wide" : "btn big wide short"}
-          aria-pressed={short}
-          onClick={() => void dispatch({ type: "station.short", data: { date: today, station: id, short: !short } })}
-        >
-          {short ? "Wieder vollzählig" : "−1 Person"}
-        </button>
-      )}
+      <h3>Besetzung ({present.length})</h3>
       {present.length === 0 && <p className="empty">Laut Wachplan niemand anwesend.</p>}
-      <ul className="plain names">
+      <ul className="plain">
         {present.map((p) => (
-          <li key={p.id}>
-            {p.name} <small>{ROSTER_ROLE_LABELS[p.role]}</small>
-          </li>
+          <PersonRow key={p.id} person={p} date={today} />
         ))}
       </ul>
       {error && <p className="error">{error}</p>}

@@ -42,22 +42,6 @@ export function setAway(draft: State, intent: IntentOf<"person.away">) {
   draft.rosterChanges[date] = { ...day, [person]: { ...day[person], away } };
 }
 
-/** „−1“: Station ist mit einer Person weniger besetzt, ohne festzulegen, wer fehlt. */
-export function setShort(draft: State, intent: IntentOf<"station.short">) {
-  const { date, station, short } = intent.data;
-  const day = draft.stationShort[date] ?? [];
-  if (day.includes(station) === short)
-    fail(
-      "INVALID_TRANSITION",
-      `${stationTitle(station)} ist bereits ${short ? "mit einer Person weniger" : "vollzählig"} besetzt.`,
-    );
-  draft.stationShort[date] = short ? [...day, station] : day.filter((id) => id !== station);
-}
-
-export function isShort(state: State, date: string, station: StationId): boolean {
-  return state.stationShort[date]?.includes(station) ?? false;
-}
-
 export type DutyPerson = RosterPerson & { at: StationId; away: boolean; moved: boolean; onTrip: boolean };
 
 /**
@@ -89,17 +73,6 @@ export function occupancy(state: State, date: string): Record<StationId, DutyPer
   >;
   for (const p of dutyRoster(state, date)) if (!p.away && !p.onTrip) result[p.at].push(p);
   return result;
-}
-
-/** Zahl der Anwesenden je Station; bei „−1“ eine weniger als laut Wachplan. */
-export function stationStrength(state: State, date: string): Record<StationId, { count: number; short: boolean }> {
-  const present = occupancy(state, date);
-  return Object.fromEntries(
-    COAST_ORDER.map((id) => {
-      const short = isShort(state, date, id);
-      return [id, { count: Math.max(0, present[id].length - (short ? 1 : 0)), short }];
-    }),
-  ) as Record<StationId, { count: number; short: boolean }>;
 }
 
 export function stationTitle(id: StationId): string {

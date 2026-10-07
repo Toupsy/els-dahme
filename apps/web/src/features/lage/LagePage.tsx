@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   activeIncidents,
   boatStatuses,
-  occupancy,
+  stationStrength,
   watchDate,
   type BoatId,
   type Point,
@@ -47,9 +47,10 @@ export function LagePage({ rest }: { rest: string[] }) {
   const { markers, lines } = useMemo(() => {
     const b = boatMarkers(boats);
     const i = incidentMarkers(incidents);
-    const present = occupancy(state, today);
-    const counts = Object.fromEntries(Object.entries(present).map(([id, people]) => [id, people.length]));
-    return { markers: [...stationMarkers(state, counts), ...b.markers, ...i.markers], lines: [...b.lines, ...i.lines] };
+    return {
+      markers: [...stationMarkers(state, stationStrength(state, today)), ...b.markers, ...i.markers],
+      lines: [...b.lines, ...i.lines],
+    };
   }, [state, boats, incidents, today]);
 
   function select(key: string) {

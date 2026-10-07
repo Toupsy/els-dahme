@@ -131,6 +131,7 @@ export const rosterSetDayIntent = intent(
 );
 export const personMoveIntent = intent("person.move", z.object({ date, person: personId, station }));
 export const personAwayIntent = intent("person.away", z.object({ date, person: personId, away: z.boolean() }));
+export const stationShortIntent = intent("station.short", z.object({ date, station, short: z.boolean() }));
 
 export const intentSchema = z.discriminatedUnion("type", [
   radioAppendIntent,
@@ -155,6 +156,7 @@ export const intentSchema = z.discriminatedUnion("type", [
   rosterSetDayIntent,
   personMoveIntent,
   personAwayIntent,
+  stationShortIntent,
 ]);
 
 export type Intent = z.infer<typeof intentSchema>;

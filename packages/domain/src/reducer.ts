@@ -2,7 +2,7 @@ import { DomainError, fail } from "./errors";
 import { intentSchema, type Intent, type IntentOf, type IntentType } from "./intents";
 import { motorOff, motorOn, recordCrew, setHoursBase, setService, setStation, switchTrip } from "./boats";
 import { addNote, assignResource, closeIncident, openIncident, releaseResource, reportEvent } from "./incidents";
-import { movePerson, setAway, setRosterDay } from "./personnel";
+import { movePerson, setAway, setRosterDay, setShort } from "./personnel";
 import { appendRadio, assertCorrectable } from "./radio";
 import { rigDown, rigUp, setFlag } from "./towers";
 import { cloneState, initialState, type State } from "./state";
@@ -44,6 +44,7 @@ const handlers: Handlers = {
   "roster.setDay": setRosterDay,
   "person.move": movePerson,
   "person.away": setAway,
+  "station.short": setShort,
 };
 
 /** Prüft die Form einer Aktion und entfernt unbekannte Felder. */

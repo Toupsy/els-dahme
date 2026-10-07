@@ -26,27 +26,30 @@ const FLAG_CLASS: Record<string, string> = {
 const PERSON_ICON =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="4.5" r="3"/><path d="M2 15c0-3.6 2.7-6 6-6s6 2.4 6 6z"/></svg>';
 
+type Strength = { count: number; short: boolean };
+
 /**
- * Türme und HW mit der Zahl der anwesenden Personen laut Wachplan (`counts`).
- * Ein besetzter oder geöffneter Turm zeigt die Zahl immer, ein offener ohne Personen fällt mit 0 auf.
+ * Türme und HW mit der Zahl der Anwesenden (`strength`). Ein besetzter oder geöffneter Turm zeigt
+ * die Zahl immer, ein offener ohne Personen fällt mit 0 auf, „−1“ mit orangem Rahmen.
  */
-export function stationMarkers(state: State, counts: Partial<Record<StationId, number>> = {}): MapMarker[] {
+export function stationMarkers(state: State, strength: Partial<Record<StationId, Strength>> = {}): MapMarker[] {
   return STATION_IDS.map((id) => {
     const tower = state.towers[id];
-    const count = counts[id] ?? 0;
+    const { count, short } = strength[id] ?? { count: 0, short: false };
     const open = id === "hw" || tower.open;
     const flag = tower.flag
       ? `<i class="flag ${FLAG_CLASS[tower.flag]}" title="${esc(FLAG_LABELS[tower.flag]!)}"></i>`
       : "";
     const crew =
-      count > 0 || open
-        ? `<small class="crew${count === 0 ? " empty" : ""}" title="${count} ${count === 1 ? "Person" : "Personen"} anwesend">${PERSON_ICON}${count}</small>`
+      count > 0 || open || short
+        ? `<small class="crew${count === 0 ? " empty" : ""}" title="${count} ${count === 1 ? "Person" : "Personen"} anwesend${short ? ", eine weniger als laut Wachplan" : ""}">${PERSON_ICON}${count}</small>`
         : "";
+    const minus = short ? '<b class="short-badge">−1</b>' : "";
     return {
       key: `station:${id}`,
       point: stationPoint(id),
-      html: `<span class="pin-label">${esc(STATIONS[id].label)}</span>${crew}${flag}`,
-      className: id === "hw" ? "hq" : tower.open ? "tower open" : "tower closed",
+      html: `<span class="pin-label">${esc(STATIONS[id].label)}</span>${crew}${flag}${minus}`,
+      className: `${id === "hw" ? "hq" : tower.open ? "tower open" : "tower closed"}${short ? " short" : ""}`,
       size: [id === "hw" ? 52 : 46, crew ? 42 : 30],
       zIndex: 100,
     };

@@ -13,6 +13,11 @@
   border-radius: 999px;
   background: var(--bg);
 }
+.count.short {
+  padding: 0 8px;
+  background: #f07c00;
+  color: #fff;
+}
 .person {
   display: grid;
   grid-template-columns: 1fr auto auto;

@@ -61,6 +61,8 @@ export type State = {
   /** Wachplan je Tag (importiert) und die Änderungen des Tages je Person. */
   roster: Record<string, RosterPerson[]>;
   rosterChanges: Record<string, Record<string, PersonChange>>;
+  /** Stationen, die an einem Tag mit einer Person weniger besetzt sind („−1“), ohne Namen. */
+  stationShort: Record<string, StationId[]>;
   settings: Settings;
 };
 
@@ -80,6 +82,7 @@ export function initialState(): State {
     incidents: {},
     roster: {},
     rosterChanges: {},
+    stationShort: {},
     settings: { mapBearing: MAP_DEFAULTS.bearing },
   };
 }
@@ -95,6 +98,7 @@ export function cloneState(state: State): State {
     incidents: { ...state.incidents },
     roster: { ...state.roster },
     rosterChanges: { ...state.rosterChanges },
+    stationShort: { ...state.stationShort },
     settings: { ...state.settings },
   };
 }

@@ -261,20 +261,24 @@
 .status-line.ok {
   color: var(--ok);
 }
-.map-pin .count {
-  position: absolute;
-  bottom: -9px;
-  right: -9px;
-  min-width: 18px;
-  height: 18px;
+.map-pin .crew {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.map-pin .crew svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+.map-pin .crew.empty {
   padding: 0 4px;
-  border-radius: 9px;
-  background: #fff;
+  border-radius: 4px;
+  background: #ffd400;
   color: #13202e;
-  font-size: 11px;
-  line-height: 18px;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* Schmale Geräte: Funktagebuch und Notizen untereinander, Panel scrollt als Ganzes */

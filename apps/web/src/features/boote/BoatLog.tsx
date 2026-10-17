@@ -9,6 +9,7 @@ import {
   tripPurpose,
   watchDate,
   type DayTrip,
+  type LogbookCrew,
   type LogbookDay,
 } from "@els/domain";
 import { go } from "../../core/route";
@@ -31,9 +32,9 @@ export function BoatLog({ log }: { log: LogbookDay }) {
           Gesamt <b>{formatHours(log.hours.totalMin)}</b>
         </span>
       </div>
-      <p className="hint">
-        Besatzung:{" "}
-        {log.crew ? `${log.crew.bootsfuehrer} (Bootsführer), ${log.crew.bootsgast} (Bootsgast)` : "nicht eingetragen"}
+      <p className="hint" data-testid={`crew-${log.boat}`}>
+        Besatzung: {crewText(log.crew)}
+        {log.crew?.source === "plan" && " · aus dem Wachplan"}
       </p>
       <div className="row">
         <button className="btn" onClick={() => go("boote", "blatt", log.boat, log.date)}>
@@ -50,6 +51,14 @@ export function BoatLog({ log }: { log: LogbookDay }) {
       {form === "crew" && <CrewForm log={log} onDone={() => setForm("none")} />}
     </div>
   );
+}
+
+/** „Mara Muster (Bootsführer), Finn Beispiel, Kai Kilo (Bootsgäste)“ */
+export function crewText(crew: LogbookCrew | null): string {
+  if (!crew) return "nicht eingetragen";
+  const leader = crew.bootsfuehrer.length ? `${crew.bootsfuehrer.join(", ")} (Bootsführer)` : "Bootsführer fehlt";
+  const guests = crew.bootsgaeste.join(", ");
+  return guests ? `${leader}, ${guests} (${guests.includes(",") ? "Bootsgäste" : "Bootsgast"})` : leader;
 }
 
 export function TripTable({ trips, rows = 0 }: { trips: DayTrip[]; rows?: number }) {
@@ -141,8 +150,8 @@ function HoursBaseForm({ log, onDone }: { log: LogbookDay; onDone: () => void })
 
 function CrewForm({ log, onDone }: { log: LogbookDay; onDone: () => void }) {
   const { dispatch, error } = useDispatch();
-  const [leader, setLeader] = useState(log.crew?.bootsfuehrer ?? "");
-  const [guest, setGuest] = useState(log.crew?.bootsgast ?? "");
+  const [leader, setLeader] = useState(log.crew?.bootsfuehrer.join(", ") ?? "");
+  const [guest, setGuest] = useState(log.crew?.bootsgaeste.join(", ") ?? "");
   async function save() {
     if (
       await dispatch({
@@ -154,11 +163,15 @@ function CrewForm({ log, onDone }: { log: LogbookDay; onDone: () => void }) {
   }
   return (
     <div className="inline-form">
+      <p className="hint">
+        {log.crew?.source === "plan" && "Vorbelegt aus dem Wachplan. Ein Eintrag hier gilt statt des Wachplans. "}
+        Mehrere Namen mit Komma trennen.
+      </p>
       <label>
-        Bootsführer <input value={leader} onChange={(e) => setLeader(e.target.value)} />
+        Bootsführer <input value={leader} maxLength={120} onChange={(e) => setLeader(e.target.value)} />
       </label>
       <label>
-        Bootsgast <input value={guest} onChange={(e) => setGuest(e.target.value)} />
+        Bootsgäste <input value={guest} maxLength={120} onChange={(e) => setGuest(e.target.value)} />
       </label>
       <button className="btn primary" disabled={!leader.trim() || !guest.trim()} onClick={() => void save()}>
         Eintragen

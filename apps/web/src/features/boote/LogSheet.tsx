@@ -1,7 +1,7 @@
 import { formatDate, formatHours, isBoatId, logbookDay } from "@els/domain";
 import { go } from "../../core/route";
 import { useLedger, useNow } from "../../core/runtime";
-import { TripTable } from "./BoatLog";
+import { TripTable, crewText } from "./BoatLog";
 
 /**
  * Tagebuch-Blatt: ein Boot, ein Tag – im Aufbau des DLRG-Bootstagebuchs.
@@ -29,6 +29,7 @@ export function LogSheet({ boat, date }: { boat: string; date: string }) {
           <p>
             Boot {boat} · {formatDate(date, true)}
           </p>
+          <p data-testid="sheet-crew">Besatzung: {crewText(log.crew)}</p>
         </header>
         <TripTable trips={log.trips} rows={6} />
         <section className="sheet-hours">
@@ -45,7 +46,7 @@ export function LogSheet({ boat, date }: { boat: string; date: string }) {
         <section className="sheet-signs">
           <h2>Unterschriften</h2>
           <div className="sign">
-            <span>{log.crew?.bootsfuehrer ?? ""}</span>Bootsführer
+            <span>{log.crew?.bootsfuehrer.join(", ") ?? ""}</span>Bootsführer
           </div>
           <div className="sign">
             <span />

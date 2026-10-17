@@ -24,9 +24,15 @@ export type BoatStatus = {
 
 /**
  * Status eines Boots, berechnet aus den gültigen Funksprüchen des Boots und
- * den Verwaltungs-Korrekturen. Nichts davon wird gespeichert.
+ * den Verwaltungs-Korrekturen. Nichts davon wird gespeichert. Mit `until`
+ * zählt nur, was bis zu diesem Zeitpunkt geschah (Liegeplatz an einem Tag).
  */
-export function deriveBoat(state: State, id: BoatId, effective?: readonly RadioEntry[]): BoatStatus {
+export function deriveBoat(
+  state: State,
+  id: BoatId,
+  effective?: readonly RadioEntry[],
+  until = Number.POSITIVE_INFINITY,
+): BoatStatus {
   const facts = state.boats[id];
   const events: { t: number; order: number; apply: () => void }[] = [];
   let station: StationId = DEFAULT_BOAT_HOMES[id];
@@ -60,7 +66,10 @@ export function deriveBoat(state: State, id: BoatId, effective?: readonly RadioE
       },
     }),
   );
-  events.sort((a, b) => a.t - b.t || a.order - b.order).forEach((e) => e.apply());
+  events
+    .filter((e) => e.t <= until)
+    .sort((a, b) => a.t - b.t || a.order - b.order)
+    .forEach((e) => e.apply());
   return { id, station, inService: facts.inService, running };
 }
 

@@ -21,12 +21,13 @@ Der Reducer `applyIntent(state, intent)` prüft zuerst und ändert danach. Ein F
 
 **Gespeichert werden nur Fakten.** Abgeleitete Werte werden bei Bedarf berechnet:
 
-| Wert                     | berechnet aus                                           |
-| ------------------------ | ------------------------------------------------------- |
-| Bootsstatus, Liegeplatz  | gültigen Funksprüchen des Boots (`deriveBoat`)          |
-| Fahrten, Betriebsstunden | „Motor läuft/aus“-Funksprüchen (`boatlog.ts`)           |
-| Besetzung der Stationen  | Wachplan des Tages + Umsetzen/Abwesend (`personnel.ts`) |
-| Boot im Einsatz          | Zuordnungen der aktiven Einsätze                        |
+| Wert                     | berechnet aus                                                            |
+| ------------------------ | ------------------------------------------------------------------------ |
+| Bootsstatus, Liegeplatz  | gültigen Funksprüchen des Boots (`deriveBoat`)                           |
+| Fahrten, Betriebsstunden | „Motor läuft/aus“-Funksprüchen (`boatlog.ts`)                            |
+| Besetzung der Stationen  | Wachplan des Tages + Umsetzen/Abwesend (`personnel.ts`)                  |
+| Boot im Einsatz          | Zuordnungen der aktiven Einsätze                                         |
+| Besatzung im Tagebuch    | Eintrag im Boote-Tab, sonst Wachplan + Turm am Liegeplatz (`logbook.ts`) |
 
 Eine Korrektur im Funkbuch wirkt deshalb sofort auf Fahrten und Betriebsstunden. Die Rechnung des Bootstagebuchs entspricht der Feature-App; die Referenzwerte stehen in `packages/domain/reference/`.
 
@@ -62,7 +63,8 @@ GET /api/els/duty?from&to  ◀── Bearer ───── Abruf alle WACHPLAN_
 
 - Der Server holt die Besetzung von heute bis `WACHPLAN_DAYS − 1` Tage voraus. Er legt `roster.setDay` nur an, wenn ein Tag vom Stand im ELS abweicht (Vergleich über `canonicalJson`). Die Geräte bekommen die Aktion über den normalen Abgleich und arbeiten offline weiter wie bisher.
 - Der Wachplan liefert nur Datum, Platz (`tower`, `captain`, `crew`, `lead`, `guard`, `standby`), Kennung, Funktion und Name, keine Planungsangaben. Die Personen-ID ist die UUID aus dem Wachplan. Deshalb bleiben Umsetzen und Abwesend erhalten, wenn ein Tag neu geliefert wird.
-- Rollen: Kapitän → BF am Boot, HW-Führung → WF, HW-Wache und Bereitschaft → HW, auf dem Turm die Funktion (F → WF, B → BF, W → WG). Den Liegeplatz der Boote liefert der Wachplan nicht, er folgt wie bisher aus dem Funk. Der Bootsführer steht dort bei der Turmbesatzung, die als Bootsgäste fährt.
+- Rollen: Kapitän → BF am Boot, weitere Besatzung → WG am Boot, HW-Führung → WF, HW-Wache und Bereitschaft → HW, auf dem Turm die Funktion (F → WF, B → BF, W → WG). Den Liegeplatz der Boote liefert der Wachplan nicht, er folgt wie bisher aus dem Funk. Der Bootsführer steht dort bei der Turmbesatzung, die als Bootsgäste fährt.
+- Bootstagebuch: Ohne Eintrag im Boote-Tab ist Bootsführer, wer im Plan auf dem Boot steht und weder umgesetzt noch abwesend ist. Bootsgäste sind die Anwesenden am Liegeplatz, bei Fahrten an jedem Ausgangspunkt des Tages (`deriveBoat` mit Stichzeit), sonst am Liegeplatz zum Tagesende. Das wird berechnet, nicht gespeichert; ein Eintrag im Boote-Tab gilt vorrangig.
 - Unbekannte Kennungen werden übersprungen und im Personal-Tab als Hinweis gezeigt. Frühere Tage und Tage, die der Wachplan nicht liefert (noch leer), bleiben unverändert.
 - Fehler (Netz, Schlüssel, Antwort) ändern nichts am Zustand. Der Personal-Tab zeigt sie zusammen mit dem letzten erfolgreichen Abruf. „Jetzt abrufen“ ruft `POST /api/wachplan/sync`.
 - Ein Datei-Import bleibt möglich. Für Tage, die der Wachplan liefert, ersetzt der nächste Abruf ihn wieder.

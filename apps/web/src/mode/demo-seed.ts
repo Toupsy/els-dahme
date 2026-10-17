@@ -39,14 +39,6 @@ export function demoSeed(now: number, deviceId: string): Intent[] {
   add(227, { type: "tower.flag", data: { station: "9-14", flag: "gelb" } });
   add(226, { type: "tower.flag", data: { station: "9-13", flag: "gelb_windsack" } });
   add(230, { type: "roster.setDay", data: { date: today, people: demoRoster() } });
-  add(225, {
-    type: "boat.crew",
-    data: { boat: "78-1", date: today, bootsfuehrer: "Mara Muster", bootsgast: "Finn Beispiel" },
-  });
-  add(225, {
-    type: "boat.crew",
-    data: { boat: "78-2", date: today, bootsfuehrer: "Lea Demo", bootsgast: "Jonas Probe" },
-  });
   add(210, { type: "radio.append", data: { from: "AD", to: "Alle", text: "Einholen Wetterdaten" } });
   add(208, {
     type: "radio.append",
@@ -106,9 +98,9 @@ function demoRows(date: string): [string, string, string][] {
     ["Hauptwache", "HW-Wache", "Bernd Beta"],
     ["Hauptwache", "HW-Wache", "Carla Gamma"],
     ["Boot 78/1", "Bootsführer", "Mara Muster"],
-    ["Boot 78/1", "Bootsführer", "Finn Beispiel"],
+    ["Boot 78/1", "Bootsgast", "Finn Beispiel"],
     ["Boot 78/2", "Bootsführer", "Lea Demo"],
-    ["Boot 78/2", "Bootsführer", "Jonas Probe"],
+    ["Boot 78/2", "Bootsgast", "Jonas Probe"],
     ["Boot 78/3", "Bootsführer", "Dirk Delta"],
   ];
   const rest = NAMES.filter((n) => !rows.some((r) => r[2] === n));
@@ -119,14 +111,19 @@ function demoRows(date: string): [string, string, string][] {
   return rows;
 }
 
+function demoRole(position: string, onBoat: boolean): "WF" | "HW" | "BF" | "WG" {
+  if (position === "Führung") return "WF";
+  if (position === "HW-Wache") return "HW";
+  return onBoat && position !== "Bootsgast" ? "BF" : "WG";
+}
+
 function demoRoster() {
   return demoRows("0").map(([code, position, name]) => {
     const boat = code.startsWith("Boot ") ? (code.slice(5).replace("/", "-") as "78-1" | "78-2" | "78-3") : null;
     return {
       id: name.toLocaleLowerCase("de"),
       name,
-      role: (position === "Führung" ? "WF" : position === "HW-Wache" ? "HW" : boat ? "BF" : "WG") as
-        "WF" | "HW" | "BF" | "WG",
+      role: demoRole(position, !!boat),
       station: boat ? null : code === "Hauptwache" ? ("hw" as const) : (code.replace("/", "-") as "9-12"),
       boat,
     };

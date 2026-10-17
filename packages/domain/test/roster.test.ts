@@ -69,6 +69,7 @@ describe("Wachplan lesen", () => {
       '"16.08.2026";"9/12";"9/12";"Wache";"Erik Epsilon";"Wachgänger";""',
       '"16.08.2026";"9/16";"9/16";"geschlossen";"";"";""',
       '"16.08.2026";"Boot 78/1";"78/1";"Bootsführer";"Dirk Delta";"Bootsführer";""',
+      '"16.08.2026";"Boot 78/1";"78/1";"Besatzung";"Bea Bord";"Bootsführer";""',
       '"16.08.2026";"Hauptwache";"HW";"Führung";"Anna Alpha";"Wachführer";""',
       '"16.08.2026";"Hauptwache";"HW";"krank";"Kurt Krank";"Wachgänger";""',
     ].join("\r\n");
@@ -76,9 +77,21 @@ describe("Wachplan lesen", () => {
     expect(preview.days[0]!.people.map((p) => `${p.name} ${p.role}@${p.station ?? p.boat}`)).toEqual([
       "Erik Epsilon WG@9-12",
       "Dirk Delta BF@78-1",
+      "Bea Bord WG@78-1",
       "Anna Alpha WF@hw",
     ]);
     expect(preview.warnings).toEqual([]);
+  });
+
+  it("Bootsgast fährt mit, führt aber nicht", () => {
+    const csv = [
+      "Tag;Code;Position;Person",
+      "16.08.;Boot 78/1;Bootsführer;Dirk Delta",
+      "16.08.;Boot 78/1;Bootsgast;Gesa Gast",
+    ];
+    expect(buildRoster(parseDelimited(csv.join("\n")), 2026).days[0]!.people.map((p) => `${p.role}@${p.boat}`)).toEqual(
+      ["BF@78-1", "WG@78-1"],
+    );
   });
 
   it("weist Dateien ohne erkennbare Kopfzeile ab", () => {

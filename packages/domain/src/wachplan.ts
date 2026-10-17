@@ -41,6 +41,7 @@ const FUNCTION_ROLE: Record<DutyPerson["role"], RosterRole> = { F: "WF", B: "BF"
 /** Am Boot und an der HW zählt der Platz, auf dem Turm die Funktion der Person. */
 function dutyRole(p: DutyPerson): RosterRole {
   if (p.slot === "captain") return "BF";
+  if (p.slot === "crew") return "WG";
   if (p.slot === "lead") return "WF";
   if (p.slot === "guard" || p.slot === "standby") return "HW";
   return FUNCTION_ROLE[p.role];

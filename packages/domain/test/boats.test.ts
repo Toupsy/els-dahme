@@ -169,6 +169,6 @@ describe("Tagebuch-Modell", () => {
     const log = logbookDay(state, "78-3", "2026-07-01", parseTs("2026-07-01T09:00:00.000Z"));
     expect(log.trips.map((t) => t.minutes)).toEqual([20]);
     expect(log.hours).toEqual({ dayMin: 20, carryMin: 600, totalMin: 620 });
-    expect(log.crew?.bootsfuehrer).toBe("A");
+    expect(log.crew).toEqual({ source: "entry", bootsfuehrer: ["A"], bootsgaeste: ["B"] });
   });
 });

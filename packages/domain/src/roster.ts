@@ -203,7 +203,10 @@ export function buildRoster(rows: readonly (readonly string[])[], year: number):
     const id = personKey(name);
     if (people.has(id)) return void warnings.add(`${date}: ${name} ist doppelt eingeteilt – erster Eintrag gilt.`);
     if (people.size >= MAX_PEOPLE) fail("INVALID_INPUT", `${date}: mehr als ${MAX_PEOPLE} Einteilungen.`);
-    people.set(id, { id, name, role: target.boat ? "BF" : role, ...target });
+    // Auf dem Boot führt der Bootsführer; Bootsgast bzw. Besatzung fährt mit.
+    const guest =
+      personKey(cell(row, columns.position)) === "bootsgast" || personKey(cell(row, columns.slot)) === "besatzung";
+    people.set(id, { id, name, role: target.boat ? (guest ? "WG" : "BF") : role, ...target });
     days.set(date, people);
     if (days.size > MAX_DAYS)
       fail("INVALID_INPUT", `Mehr als ${MAX_DAYS} Wachtage. Bitte den Zeitraum getrennt einlesen.`);

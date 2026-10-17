@@ -16,7 +16,7 @@ const DUTY = wachplanDutySchema.parse({
         { id: "u-4", name: "Dirk Delta", role: "B", slot: "captain", code: "78/1" },
         { id: "u-5", name: "Erik Epsilon", role: "W", slot: "tower", code: "9/12" },
         { id: "u-6", name: "Fritz Fünf", role: "B", slot: "tower", code: "9/13" },
-        { id: "u-7", name: "Gerd Gast", role: "W", slot: "crew", code: "78/2" },
+        { id: "u-7", name: "Gerd Gast", role: "B", slot: "crew", code: "78/2" },
         { id: "u-8", name: "Hanna Heim", role: "W", slot: "tower", code: "9/19" },
         { id: "u-9", name: "Ida Irrtum", role: "W", slot: "tower", code: "78/3" },
         { id: "u-5", name: "Erik Epsilon", role: "W", slot: "tower", code: "9/14" },

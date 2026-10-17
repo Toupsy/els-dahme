@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
-import { sessionInfoSchema } from "@els/domain";
+import { sessionInfoSchema, wachplanStatusSchema } from "@els/domain";
 import { Ledger, errorMessage } from "../core/ledger";
 import type { Bootstrap, Runtime } from "../core/runtime";
 import { SessionExpired, api, createSync, serverNow } from "../core/sync";
@@ -27,6 +27,14 @@ export const bootstrap: Bootstrap = async () => {
     subscribeStatus: sync.subscribe,
     kick: sync.kick,
     sessionExpiresAt: () => sessionExpiresAt,
+    wachplan: {
+      status: async () => wachplanStatusSchema.parse(await api("/api/wachplan")),
+      async sync() {
+        const status = wachplanStatusSchema.parse(await api("/api/wachplan/sync", {}));
+        sync.kick();
+        return status;
+      },
+    },
     async logout() {
       await api("/api/logout", {}).catch(() => undefined);
       await ledger.setMeta("sessionExpiresAt", undefined);

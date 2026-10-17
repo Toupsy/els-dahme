@@ -63,6 +63,24 @@ describe("Wachplan lesen", () => {
     ]);
   });
 
+  it("CSV des Wachplan-Generators: Kranke werden nicht übernommen", () => {
+    const csv = [
+      '"Datum";"Station";"Kennung";"Rolle im Slot";"Name";"Funktion";"Labels"',
+      '"16.08.2026";"9/12";"9/12";"Wache";"Erik Epsilon";"Wachgänger";""',
+      '"16.08.2026";"9/16";"9/16";"geschlossen";"";"";""',
+      '"16.08.2026";"Boot 78/1";"78/1";"Bootsführer";"Dirk Delta";"Bootsführer";""',
+      '"16.08.2026";"Hauptwache";"HW";"Führung";"Anna Alpha";"Wachführer";""',
+      '"16.08.2026";"Hauptwache";"HW";"krank";"Kurt Krank";"Wachgänger";""',
+    ].join("\r\n");
+    const preview = buildRoster(parseDelimited(csv), 2026);
+    expect(preview.days[0]!.people.map((p) => `${p.name} ${p.role}@${p.station ?? p.boat}`)).toEqual([
+      "Erik Epsilon WG@9-12",
+      "Dirk Delta BF@78-1",
+      "Anna Alpha WF@hw",
+    ]);
+    expect(preview.warnings).toEqual([]);
+  });
+
   it("weist Dateien ohne erkennbare Kopfzeile ab", () => {
     expect(() => buildRoster([["a", "b"]], 2026)).toThrow(/Kopfzeile/);
   });

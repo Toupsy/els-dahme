@@ -4,7 +4,7 @@ import { openDatabase } from "./db";
 
 const config = readConfig(process.env);
 const db = openDatabase(config.DATABASE_PATH);
-const { app } = await buildApp(config, db);
+const { app, wachplan } = await buildApp(config, db);
 
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, () => {
@@ -15,3 +15,4 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
   });
 
 await app.listen({ host: config.HOST, port: config.PORT });
+wachplan?.start();

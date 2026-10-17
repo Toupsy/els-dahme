@@ -52,6 +52,21 @@ log    (IndexedDB) ◀── GET /api/sync/pull ── angenommene Aktionen ab s
 - **Lesende Endpunkte** schreiben nie.
 - Ein Cursor hinter dem Serverstand (nach einer Wiederherstellung) führt zu einem vollständigen Abgleich, die Outbox bleibt erhalten.
 
+## Wachplan-Anbindung
+
+```
+Wachplan-Generator                          ELS-Server
+GET /api/els/duty?from&to  ◀── Bearer ───── Abruf alle WACHPLAN_INTERVAL_SECONDS (wachplan.ts)
+{ plan, revision, days }   ───────────────▶ rosterFromDuty → roster.setDay (Geräte-ID des Servers)
+```
+
+- Der Server holt die Besetzung von heute bis `WACHPLAN_DAYS − 1` Tage voraus. Er legt `roster.setDay` nur an, wenn ein Tag vom Stand im ELS abweicht (Vergleich über `canonicalJson`). Die Geräte bekommen die Aktion über den normalen Abgleich und arbeiten offline weiter wie bisher.
+- Der Wachplan liefert nur Datum, Platz (`tower`, `captain`, `crew`, `lead`, `guard`, `standby`), Kennung, Funktion und Name, keine Planungsangaben. Die Personen-ID ist die UUID aus dem Wachplan. Deshalb bleiben Umsetzen und Abwesend erhalten, wenn ein Tag neu geliefert wird.
+- Rollen: Kapitän → BF am Boot, HW-Führung → WF, HW-Wache und Bereitschaft → HW, auf dem Turm die Funktion (F → WF, B → BF, W → WG). Den Liegeplatz der Boote liefert der Wachplan nicht, er folgt wie bisher aus dem Funk. Der Bootsführer steht dort bei der Turmbesatzung, die als Bootsgäste fährt.
+- Unbekannte Kennungen werden übersprungen und im Personal-Tab als Hinweis gezeigt. Frühere Tage und Tage, die der Wachplan nicht liefert (noch leer), bleiben unverändert.
+- Fehler (Netz, Schlüssel, Antwort) ändern nichts am Zustand. Der Personal-Tab zeigt sie zusammen mit dem letzten erfolgreichen Abruf. „Jetzt abrufen“ ruft `POST /api/wachplan/sync`.
+- Ein Datei-Import bleibt möglich. Für Tage, die der Wachplan liefert, ersetzt der nächste Abruf ihn wieder.
+
 ## Offline
 
 Der Service Worker (Workbox) liefert die App-Shell aus dem Cache. Kartenkacheln werden beim Ansehen gespeichert. „Revier vorladen“ in den Einstellungen holt einmalig etwa 400 Kacheln (Zoom 13–17).

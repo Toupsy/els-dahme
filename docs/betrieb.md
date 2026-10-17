@@ -59,6 +59,31 @@ Weitere Einstellungen in `.env`:
 | `LOGIN_WINDOW_MINUTES` | Zeitfenster für Fehlversuche                | 15       |
 | `TRUST_PROXY`          | hinter Caddy `true` (echte Client-IP)       | false    |
 
+## Wachplan anbinden
+
+Der Server kann die Besetzung direkt beim Wachplan-Generator abholen. Dann muss niemand mehr eine Datei einlesen.
+
+1. Im Wachplan den Plan der Saison öffnen, unter Einstellungen → ELS-Anbindung „Schlüssel erzeugen“ wählen. Das darf nur der Eigentümer des Plans. Der Schlüssel wird nur einmal angezeigt.
+2. In `.env` eintragen:
+
+   ```bash
+   WACHPLAN_URL=https://wachplan.example.de
+   WACHPLAN_KEY=<Schlüssel aus dem Wachplan>
+   ```
+
+3. `docker compose up -d` startet den Server neu. Im Tab Personal steht danach „Besetzung kommt direkt aus dem Wachplan …“ mit der Zeit des letzten Abrufs.
+
+| Variable                    | Bedeutung                                       | Standard |
+| --------------------------- | ----------------------------------------------- | -------- |
+| `WACHPLAN_URL`              | Adresse des Wachplan-Generators                 | aus      |
+| `WACHPLAN_KEY`              | Schlüssel aus Einstellungen → ELS-Anbindung     | aus      |
+| `WACHPLAN_DAYS`             | Abgerufene Tage ab heute (2 = heute und morgen) | 2        |
+| `WACHPLAN_INTERVAL_SECONDS` | Abstand der Abrufe                              | 60       |
+
+Über das Internet nur mit `https://`. `http://` nimmt der Server nur für Adressen im eigenen Netz an (Docker-Dienstname, `localhost`, private IP). Erzeugt man im Wachplan einen neuen Schlüssel, ist der alte sofort ungültig. Der Personal-Tab meldet das dann, bis der neue in `.env` steht.
+
+Für heute und die abgerufenen Tage gilt der Wachplan. Was die Wachführung im ELS ändert (Umsetzen, Abwesend), bleibt erhalten. Ein Tag, der im Wachplan noch leer ist, wird nicht angefasst.
+
 ## Sicherung
 
 Die Sicherung läuft im laufenden Betrieb und ist konsistent (SQLite-Backup-API):

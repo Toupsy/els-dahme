@@ -9,6 +9,7 @@ import { registerAuth } from "./auth";
 import type { Config } from "./config";
 import type { Db } from "./db";
 import { createLedger } from "./ledger";
+import { WACHPLAN_OFF, createWachplanLink } from "./wachplan";
 
 const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy": [
@@ -29,7 +30,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
 };
 
-export type AppOptions = { now?: () => number };
+export type AppOptions = { now?: () => number; fetch?: typeof fetch };
 
 export async function buildApp(config: Config, db: Db, options: AppOptions = {}) {
   const app = Fastify({
@@ -38,6 +39,20 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
     bodyLimit: 4 * 1024 * 1024,
   });
   const ledger = createLedger(db, (message) => app.log.warn(message));
+  const wachplan =
+    config.WACHPLAN_URL && config.WACHPLAN_KEY
+      ? createWachplanLink(
+          {
+            url: config.WACHPLAN_URL,
+            key: config.WACHPLAN_KEY,
+            days: config.WACHPLAN_DAYS,
+            intervalMs: config.WACHPLAN_INTERVAL_SECONDS * 1000,
+          },
+          ledger,
+          { now: options.now ?? Date.now, fetch: options.fetch ?? fetch, log: (message) => app.log.warn(message) },
+        )
+      : null;
+  app.addHook("onClose", async () => wachplan?.stop());
 
   app.addHook("onSend", async (_request, reply) => {
     for (const [key, value] of Object.entries(SECURITY_HEADERS)) reply.header(key, value);
@@ -101,6 +116,16 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
     return result;
   });
 
+  app.get("/api/wachplan", async (_request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    return wachplan?.status() ?? WACHPLAN_OFF;
+  });
+
+  app.post("/api/wachplan/sync", async (_request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    return wachplan ? wachplan.syncNow() : WACHPLAN_OFF;
+  });
+
   const webRoot = resolve(config.WEB_DIST);
   if (existsSync(webRoot)) {
     await app.register(fastifyStatic, {
@@ -118,5 +143,5 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
     });
   }
 
-  return { app, ledger };
+  return { app, ledger, wachplan };
 }

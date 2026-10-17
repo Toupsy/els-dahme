@@ -5,13 +5,15 @@ import { DayBar } from "../../components/DayBar";
 import { useLedger, useRuntime } from "../../core/runtime";
 import { ImportPanel } from "./ImportPanel";
 import { PersonRow } from "./PersonRow";
+import { WachplanBar, useWachplan } from "./WachplanBar";
 
-/** Besetzung eines Tages je Station; Wachplan-Import. */
+/** Besetzung eines Tages je Station; Wachplan direkt angebunden oder als Datei eingelesen. */
 export function PersonalPage() {
   const runtime = useRuntime();
   const { state } = useLedger();
   const [date, setDate] = useState(() => watchDate(runtime.now()));
   const [importing, setImporting] = useState(false);
+  const wachplan = useWachplan();
   const people = dutyRoster(state, date);
   const present = occupancy(state, date);
   const away = people.filter((p) => p.away);
@@ -26,7 +28,8 @@ export function PersonalPage() {
           Wachplan einlesen …
         </button>
       </div>
-      {importing && <ImportPanel onDone={() => setImporting(false)} />}
+      <WachplanBar link={wachplan} />
+      {importing && <ImportPanel linked={!!wachplan.status?.configured} onDone={() => setImporting(false)} />}
       {!people.length && <p className="empty card">Für diesen Tag ist kein Wachplan eingelesen.</p>}
       {people.length > 0 && (
         <div className="crew-grid">

@@ -33,6 +33,11 @@ const envSchema = z
       .transform((v) => v === "true"),
     WEB_DIST: z.string().default("./apps/web/dist"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "silent"]).default("info"),
+    /** Wachplan-Generator, von dem der Server die Besetzung abholt. Ohne beide Werte bleibt die Anbindung aus. */
+    WACHPLAN_URL: z.preprocess(emptyToUndefined, z.url().optional()),
+    WACHPLAN_KEY: z.preprocess(emptyToUndefined, z.string().min(20, "WACHPLAN_KEY ist zu kurz").optional()),
+    WACHPLAN_DAYS: z.coerce.number().int().min(1).max(14).default(2),
+    WACHPLAN_INTERVAL_SECONDS: z.coerce.number().int().min(15).max(3600).default(60),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production" && !env.PUBLIC_ORIGIN.startsWith("https://"))
@@ -41,7 +46,30 @@ const envSchema = z
         path: ["PUBLIC_ORIGIN"],
         message: "Im Live-Betrieb ist HTTPS erforderlich",
       });
+    if (!env.WACHPLAN_URL !== !env.WACHPLAN_KEY)
+      ctx.addIssue({
+        code: "custom",
+        path: [env.WACHPLAN_URL ? "WACHPLAN_KEY" : "WACHPLAN_URL"],
+        message: "WACHPLAN_URL und WACHPLAN_KEY nur zusammen setzen",
+      });
+    // Der Schlüssel darf nicht unverschlüsselt durchs Internet; im eigenen Netz geht auch HTTP.
+    if (env.NODE_ENV === "production" && env.WACHPLAN_URL?.startsWith("http://") && !isInternalHost(env.WACHPLAN_URL))
+      ctx.addIssue({
+        code: "custom",
+        path: ["WACHPLAN_URL"],
+        message: "Über das Internet nur mit HTTPS (HTTP nur im eigenen Netz)",
+      });
   });
+
+function emptyToUndefined(value: unknown) {
+  return value === "" ? undefined : value;
+}
+
+/** Docker-Dienstname, localhost oder private IPv4-Adresse. */
+function isInternalHost(url: string): boolean {
+  const host = new URL(url).hostname;
+  return !host.includes(".") || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+}
 
 export type Config = z.infer<typeof envSchema>;
 

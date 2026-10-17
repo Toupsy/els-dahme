@@ -13,7 +13,7 @@ import { errorMessage } from "../../core/ledger";
 import { useDispatch, useLedger, useRuntime } from "../../core/runtime";
 
 /** Wachplan-Import: Datei wählen → Vorschau prüfen → übernehmen. Gelesen wird nur im Browser. */
-export function ImportPanel({ onDone }: { onDone: () => void }) {
+export function ImportPanel({ linked, onDone }: { linked: boolean; onDone: () => void }) {
   const runtime = useRuntime();
   const { state } = useLedger();
   const { dispatch, error } = useDispatch();
@@ -56,6 +56,11 @@ export function ImportPanel({ onDone }: { onDone: () => void }) {
     <section className="card stack-tight" data-testid="roster-import">
       <h2>Wachplan einlesen</h2>
       <p className="hint">CSV oder XLSX mit den Spalten Tag, Standort oder Code, Position, Person.</p>
+      {linked && (
+        <p className="hint">
+          Der Wachplan ist direkt angebunden. Tage, die er liefert, ersetzt er beim nächsten Abruf wieder.
+        </p>
+      )}
       <div className="row">
         {runtime.sampleRosterCsv && (
           <button

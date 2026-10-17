@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
-import type { Intent, IntentInput, IntentType } from "@els/domain";
+import type { Intent, IntentInput, IntentType, WachplanStatus } from "@els/domain";
 import { errorMessage, type Ledger, type LedgerSnapshot } from "./ledger";
 
 export type SyncStatus =
@@ -26,6 +26,8 @@ export interface Runtime {
   resetDemo?(): Promise<void>;
   /** Nur Demo: Beispieldatei für den Wachplan-Import. */
   sampleRosterCsv?(): string;
+  /** Nur Live: Stand der direkten Wachplan-Anbindung; `sync` ruft sofort ab. */
+  wachplan?: { status(): Promise<WachplanStatus>; sync(): Promise<WachplanStatus> };
 }
 
 /** Einstieg je Betriebsart (src/mode/live.tsx bzw. src/mode/demo.tsx). */

@@ -27,7 +27,7 @@ Caddy holt das HTTPS-Zertifikat automatisch. Betrieb, Passcode-Wechsel und Siche
 - **Bootstagebuch:** im Tab Boote je Tag, mit Betriebsstunden (Einsatztag, Übertrag, Gesamt) und Tagebuch-Blatt zum Drucken. Den Stand aus dem Papierbuch trägt man einmal unter „Übertrag …“ ein.
 - **Einsätze:** Kräfte zuordnen (ein Boot startet dabei die Einsatzfahrt), Lagemeldungen, Notizen, Abschluss mit Kopfdaten.
 - **Funk:** Schnelleingabe wie „78-1 Motor läuft, Kontrollfahrt“. Korrekturen werden als neuer Eintrag gespeichert.
-- **Personal:** Besetzung je Station; Wachplan als CSV oder XLSX einlesen, Vorschau prüfen, übernehmen.
+- **Personal:** Besetzung je Station. Ist der Wachplan-Generator angebunden ([docs/betrieb.md](docs/betrieb.md#wachplan-anbinden)), kommt sie von dort, sonst den Wachplan als CSV oder XLSX einlesen, Vorschau prüfen, übernehmen.
 - Der **Sync-Stand** steht oben rechts. Antippen gleicht sofort ab.
 
 ## Entwicklung

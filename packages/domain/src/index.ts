@@ -16,3 +16,4 @@ export * from "./incidents";
 export * from "./xlsx";
 export * from "./roster";
 export * from "./personnel";
+export * from "./wachplan";

@@ -37,8 +37,8 @@ export async function api(path: string, body?: unknown): Promise<unknown> {
   else if (Number.isFinite(date)) clockOffset = 0;
   if (response.status === 401) throw new SessionExpired();
   if (response.status === 409) throw new Conflict();
-  const json = (await response.json().catch(() => ({}))) as { message?: string };
-  if (!response.ok) throw new Error(json.message ?? `Serverfehler ${response.status}`);
+  const json = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+  if (!response.ok) throw new Error(json.message ?? json.error ?? `Serverfehler ${response.status}`);
   return json;
 }
 
@@ -51,6 +51,7 @@ export function createSync(ledger: Ledger) {
   const listeners = new Set<() => void>();
   let running: Promise<void> | null = null;
   let again = false;
+  let authGeneration = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const set = (next: SyncStatus) => {
@@ -91,15 +92,19 @@ export function createSync(ledger: Ledger) {
   }
 
   async function cycle() {
+    const generation = authGeneration;
+    const update = (next: SyncStatus) => {
+      if (generation === authGeneration) set(next);
+    };
     if (!navigator.onLine) return set({ kind: "offline" });
     set({ kind: "syncing" });
     try {
       await pull();
       await push();
-      set(ledger.pendingIntents.length ? { kind: "pending" } : { kind: "synced", at: Date.now() });
+      update(ledger.pendingIntents.length ? { kind: "pending" } : { kind: "synced", at: Date.now() });
     } catch (error) {
-      if (error instanceof SessionExpired) return set({ kind: "login" });
-      set(
+      if (error instanceof SessionExpired) return update({ kind: "login" });
+      update(
         navigator.onLine && !(error instanceof TypeError)
           ? { kind: "error", message: (error as Error).message }
           : { kind: "offline" },
@@ -145,6 +150,7 @@ export function createSync(ledger: Ledger) {
       run();
     },
     requireLogin() {
+      authGeneration++;
       set({ kind: "login" });
     },
   };

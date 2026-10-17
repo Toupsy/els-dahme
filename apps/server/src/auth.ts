@@ -1,7 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
-import type { Config } from "./config";
+import { safePortalPath, type Config } from "./config";
 import type { Db } from "./db";
 import { verifyPasscode } from "./passcode";
 import { WACHPLAN_SESSION_COOKIE, wachplanUser } from "./wachplan";
@@ -36,9 +36,11 @@ export function registerAuth(
     .slice(0, 16);
 
   const insertSession = db.prepare(
-    "INSERT INTO sessions(token_hash, created_at, expires_at, passcode_tag) VALUES(?,?,?,?)",
+    "INSERT INTO sessions(token_hash, created_at, expires_at, passcode_tag, source, source_hash, username) VALUES(?,?,?,?,?,?,?)",
   );
-  const findSession = db.prepare("SELECT expires_at FROM sessions WHERE token_hash = ? AND passcode_tag = ?");
+  const findSession = db.prepare(
+    "SELECT expires_at, source, source_hash, username FROM sessions WHERE token_hash = ? AND passcode_tag = ?",
+  );
   const deleteSession = db.prepare("DELETE FROM sessions WHERE token_hash = ?");
   const deleteExpired = db.prepare("DELETE FROM sessions WHERE expires_at <= ?");
   const getFailures = db.prepare("SELECT failures, window_start FROM login_failures WHERE ip = ?");
@@ -54,20 +56,34 @@ export function registerAuth(
     path: "/",
   };
 
-  function currentSession(request: FastifyRequest): { expiresAt: number } | null {
+  type Session = { expires_at: number; source: string; source_hash: string | null; username: string | null };
+  function currentSession(request: FastifyRequest): Session | null {
     const token = request.cookies[SESSION_COOKIE];
     if (!token) return null;
-    const row = findSession.get(tokenHash(token), passcodeTag) as { expires_at: number } | undefined;
+    const row = findSession.get(tokenHash(token), passcodeTag) as Session | undefined;
     if (!row || row.expires_at <= now()) return null;
-    return { expiresAt: row.expires_at };
+    return row;
   }
 
   // Alle /api-Routen außer der Anmeldung verlangen eine gültige Sitzung.
   app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
     const path = request.url.split("?")[0] ?? "";
-    if (!path.startsWith("/api/") || PUBLIC_API.has(path)) return;
-    if (!currentSession(request))
-      return reply.code(401).header("Cache-Control", "no-store").send({ message: "Anmeldung erforderlich." });
+    if (!path.startsWith("/api/") || PUBLIC_API.has(path) || (config.PORTAL_ENABLED && path === "/api/logout/portal"))
+      return;
+    const session = currentSession(request);
+    let valid = !!session;
+    if (session && config.PORTAL_ENABLED) {
+      if (session.source === "legacy") valid = false;
+      if (session.source === "wachplan") {
+        const source = request.cookies[WACHPLAN_SESSION_COOKIE];
+        valid = !!source && tokenHash(source) === session.source_hash;
+        if (valid) {
+          const user = await wachplanUser({ url: config.WACHPLAN_URL!, key: config.WACHPLAN_KEY! }, source!, fetchImpl);
+          valid = user.ok && user.username === session.username;
+        }
+      }
+    }
+    if (!valid) return reply.code(401).header("Cache-Control", "no-store").send({ message: "Anmeldung erforderlich." });
   });
 
   /** Sekunden bis zum nächsten erlaubten Versuch, oder null. */
@@ -83,14 +99,22 @@ export function registerAuth(
     putFailures.run(ip, inWindow ? record.failures + 1 : 1, inWindow ? record.window_start : t);
   }
 
-  function startSession(ip: string, t: number, reply: FastifyReply) {
+  function startSession(ip: string, t: number, reply: FastifyReply, sourceCookie?: string, username?: string) {
     clearFailures.run(ip);
     deleteExpired.run(t);
     const token = randomBytes(32).toString("base64url");
     const expiresAt = t + ttlMs;
-    insertSession.run(tokenHash(token), t, expiresAt, passcodeTag);
+    insertSession.run(
+      tokenHash(token),
+      t,
+      expiresAt,
+      passcodeTag,
+      sourceCookie ? "wachplan" : "passcode",
+      sourceCookie ? tokenHash(sourceCookie) : null,
+      username ?? null,
+    );
     reply.setCookie(SESSION_COOKIE, token, { ...cookieOptions, expires: new Date(expiresAt) });
-    return { expiresAt: new Date(expiresAt).toISOString() };
+    return { expiresAt: new Date(expiresAt).toISOString(), ...(username ? { username } : {}) };
   }
 
   const tooMany = (reply: FastifyReply, retry: number) =>
@@ -113,11 +137,12 @@ export function registerAuth(
   });
 
   // Das Wachplan-Cookie kommt nur mit, wenn beide unter derselben Adresse laufen (Pfad wie /plan/).
-  const wachplanLogin = !!(config.WACHPLAN_URL && config.WACHPLAN_KEY && config.WACHPLAN_PUBLIC_URL?.startsWith("/"));
+  const wachplanLogin = !!(config.WACHPLAN_URL && config.WACHPLAN_KEY && safePortalPath(config.WACHPLAN_PUBLIC_URL));
 
   app.get("/api/login/options", async (_request, reply) => {
     reply.header("Cache-Control", "no-store");
     return {
+      ...(config.PORTAL_ENABLED ? { portal: true } : {}),
       wachplan: config.WACHPLAN_PUBLIC_URL ? { url: config.WACHPLAN_PUBLIC_URL, login: wachplanLogin } : null,
     };
   });
@@ -136,8 +161,37 @@ export function registerAuth(
       if (user.status === 403) failed(request.ip, t);
       return reply.code(user.status).send({ message: user.message });
     }
-    return startSession(request.ip, t, reply);
+    return startSession(request.ip, t, reply, cookie, user.username);
   });
+
+  if (config.PORTAL_ENABLED)
+    app.post("/api/logout/portal", async (request, reply) => {
+      reply.header("Cache-Control", "no-store");
+      const token = request.cookies[SESSION_COOKIE];
+      const source = request.cookies[WACHPLAN_SESSION_COOKIE];
+      if (token) deleteSession.run(tokenHash(token));
+      // Auch andere ELS-Sitzungen derselben Wachplan-Sitzung sofort sperren.
+      if (source)
+        db.prepare("DELETE FROM sessions WHERE source = 'wachplan' AND source_hash = ?").run(tokenHash(source));
+      reply.clearCookie(SESSION_COOKIE, cookieOptions);
+      reply.clearCookie(WACHPLAN_SESSION_COOKIE, { ...cookieOptions, sameSite: "lax" });
+      if (source) {
+        try {
+          const response = await fetchImpl(`${config.WACHPLAN_URL!.replace(/\/+$/, "")}/api/auth/logout`, {
+            method: "POST",
+            headers: { Cookie: `${WACHPLAN_SESSION_COOKIE}=${encodeURIComponent(source)}` },
+            redirect: "error",
+            signal: AbortSignal.timeout(10_000),
+          });
+          if (!response.ok) throw new Error("logout");
+        } catch {
+          return reply.code(502).send({
+            message: "Lokal abgemeldet. Wachplan-Abmeldung konnte nicht bestätigt werden. Bitte erneut versuchen.",
+          });
+        }
+      }
+      return { ok: true };
+    });
 
   app.post("/api/logout", async (request, reply) => {
     const token = request.cookies[SESSION_COOKIE];
@@ -149,6 +203,9 @@ export function registerAuth(
   app.get("/api/session", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
     const session = currentSession(request);
-    return { expiresAt: new Date(session!.expiresAt).toISOString() };
+    return {
+      expiresAt: new Date(session!.expires_at).toISOString(),
+      ...(session!.username ? { username: session!.username } : {}),
+    };
   });
 }

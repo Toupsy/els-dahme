@@ -31,6 +31,10 @@ const envSchema = z
       .enum(["true", "false"])
       .default("false")
       .transform((v) => v === "true"),
+    PORTAL_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     WEB_DIST: z.string().default("./apps/web/dist"),
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "silent"]).default("info"),
     /** Wachplan-Generator, von dem der Server die Besetzung abholt. Ohne beide Werte bleibt die Anbindung aus. */
@@ -55,6 +59,12 @@ const envSchema = z
         path: ["PUBLIC_ORIGIN"],
         message: "Im Live-Betrieb ist HTTPS erforderlich",
       });
+    if (env.PORTAL_ENABLED && (!env.WACHPLAN_URL || !env.WACHPLAN_KEY || !safePortalPath(env.WACHPLAN_PUBLIC_URL)))
+      ctx.addIssue({
+        code: "custom",
+        path: ["PORTAL_ENABLED"],
+        message: "Portal braucht WACHPLAN_URL, WACHPLAN_KEY und einen sicheren WACHPLAN_PUBLIC_URL-Pfad wie /plan/",
+      });
     // Adresse ohne Schlüssel ist erlaubt (Verbund vor dem ersten Schlüssel), die Anbindung bleibt dann aus.
     if (env.WACHPLAN_KEY && !env.WACHPLAN_URL)
       ctx.addIssue({ code: "custom", path: ["WACHPLAN_URL"], message: "WACHPLAN_KEY braucht WACHPLAN_URL" });
@@ -66,6 +76,11 @@ const envSchema = z
         message: "Über das Internet nur mit HTTPS (HTTP nur im eigenen Netz)",
       });
   });
+
+/** Nur kanonische, gleichursprüngliche Pfade, keine kodierten Redirects oder Dot-Segmente. */
+export function safePortalPath(value: string | undefined): boolean {
+  return !!value && /^\/(?!\/)[A-Za-z0-9/_-]*$/.test(value) && value !== "/";
+}
 
 function emptyToUndefined(value: unknown) {
   return value === "" ? undefined : value;

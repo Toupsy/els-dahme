@@ -7,7 +7,8 @@ services:
     image: ${WACHPLAN_IMAGE:-ghcr.io/toupsy/wachplan-generator:main}
     env_file: wachplan.env
     environment:
-      ELS_URL: /
+      ELS_URL: /els/
+      PORTAL_URL: /
     restart: unless-stopped
     volumes:
       - wachplan_data:/app/data
@@ -15,6 +16,7 @@ services:
       - no-new-privileges:true
   app:
     environment:
+      PORTAL_ENABLED: "true"
       WACHPLAN_URL: http://wachplan:3000
       WACHPLAN_PUBLIC_URL: /plan/
   proxy:

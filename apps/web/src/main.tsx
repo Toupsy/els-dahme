@@ -6,6 +6,7 @@ import { RuntimeProvider } from "./core/runtime";
 import { App } from "./features/shell/App";
 import "leaflet/dist/leaflet.css";
 import "./styles/app.css";
+import "./styles/portal.css";
 
 registerSW({ immediate: true });
 

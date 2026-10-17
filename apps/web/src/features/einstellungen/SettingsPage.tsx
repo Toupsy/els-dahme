@@ -63,7 +63,7 @@ export function SettingsPage() {
               ist; offline geht die Arbeit weiter.
             </p>
           )}
-          <button className="btn big" onClick={() => void runtime.logout?.()}>
+          <button className="btn big" onClick={() => void runtime.logout?.().catch(() => undefined)}>
             Abmelden
           </button>
         </section>

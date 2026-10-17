@@ -76,4 +76,14 @@ export const migrations: { version: number; name: string; sql: string }[] = [
       ALTER TABLE sessions ADD COLUMN passcode_tag TEXT NOT NULL DEFAULT '';
     `,
   },
+  {
+    version: 4,
+    name: "sitzungsquelle",
+    sql: `
+      -- Alte Sitzungen sind nicht eindeutig zuordenbar und brauchen im Portal eine neue Anmeldung.
+      ALTER TABLE sessions ADD COLUMN source TEXT NOT NULL DEFAULT 'legacy';
+      ALTER TABLE sessions ADD COLUMN source_hash TEXT;
+      ALTER TABLE sessions ADD COLUMN username TEXT;
+    `,
+  },
 ];

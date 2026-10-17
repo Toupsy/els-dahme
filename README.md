@@ -19,6 +19,8 @@ docker compose up -d --build
 
 Caddy holt das HTTPS-Zertifikat automatisch. Betrieb, Passcode-Wechsel und Sicherung: [docs/betrieb.md](docs/betrieb.md).
 
+**Gemeinsames Portal:** Mit `PORTAL_ENABLED=true`, `WACHPLAN_URL`, `WACHPLAN_KEY` und `WACHPLAN_PUBLIC_URL=/plan/` wird `/` zur Konto-Anmeldung und Werkzeugauswahl. Das ELS liegt dann unter `/els/`; bestehende Hash-Tabs funktionieren weiter. Der Passcode bleibt unter `/els/?zugang=tablet` verfügbar. Account-Sitzungen werden bei jeder geschützten Anfrage an der ursprünglichen Wachplan-Sitzung und deren Planberechtigung geprüft. Beim erstmaligen Aktivieren müssen alte, nicht zuordenbare ELS-Sitzungen einmal neu angemeldet werden; Daten und Outbox bleiben erhalten. `POST /api/logout/portal` meldet beide Werkzeuge ab und meldet auch Teilfehler. Ohne Portal-Modus bleiben Standalone und Demo unverändert.
+
 **Mit dem Wachplan-Generator als ein Programm:** `docker-compose.wachplan.yml` stellt den Wachplan unter `/plan/` derselben Adresse bereit. Planer melden sich dann im ELS mit ihrem Wachplan-Konto an, Tablets weiter mit dem Passcode. Einrichtung: [docs/betrieb.md](docs/betrieb.md#ein-programm-wachplan-unter-derselben-adresse).
 
 ## Bedienung in Kürze

@@ -31,11 +31,14 @@ export const pullResponseSchema = z.object({
 export type PushResult = z.infer<typeof pushResultSchema>;
 export type PullResponse = z.infer<typeof pullResponseSchema>;
 
-export const sessionInfoSchema = z.object({ expiresAt: z.string() });
+export const sessionInfoSchema = z.object({ expiresAt: z.string(), username: z.string().optional() });
 export type SessionInfo = z.infer<typeof sessionInfoSchema>;
 
 /** Vor der Anmeldung lesbar: Ist ein Wachplan angebunden, und geht die Anmeldung mit Wachplan-Konto? */
 export const loginOptionsSchema = z.object({
+  portal: z.boolean().optional(),
   wachplan: z.object({ url: z.string(), login: z.boolean() }).nullable(),
 });
 export type LoginOptions = z.infer<typeof loginOptionsSchema>;
+
+export const portalAccountSchema = z.object({ user: z.object({ username: z.string() }) });

@@ -34,6 +34,7 @@ export async function wachplanUser(
         Cookie: `${WACHPLAN_SESSION_COOKIE}=${encodeURIComponent(sessionCookie)}`,
         Accept: "application/json",
       },
+      redirect: "error",
       signal: AbortSignal.timeout(10_000),
     });
   } catch {

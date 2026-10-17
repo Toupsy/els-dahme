@@ -19,8 +19,14 @@ export default defineConfig({
   projects: [
     { name: "demo", testMatch: /demo\.spec\.ts/, use: { baseURL: "http://127.0.0.1:4174", ...chromium } },
     { name: "live", testMatch: /live\.spec\.ts/, use: { baseURL: "http://127.0.0.1:4175", ...chromium } },
+    { name: "portal", testMatch: /portal\.spec\.ts/, use: { baseURL: "http://127.0.0.1:4176", ...chromium } },
   ],
   webServer: [
+    {
+      command: "node scripts/serve-portal-fixture.mjs",
+      url: "http://127.0.0.1:4176/health",
+      reuseExistingServer: false,
+    },
     {
       command: "node scripts/serve-preview.mjs 4174",
       url: "http://127.0.0.1:4174",

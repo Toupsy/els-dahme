@@ -1,4 +1,4 @@
-import { createHmac, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { safePortalPath, type Config } from "./config";
@@ -7,6 +7,14 @@ import { verifyPasscode } from "./passcode";
 import { WACHPLAN_SESSION_COOKIE, wachplanUser } from "./wachplan";
 
 export const SESSION_COOKIE = "els_session";
+const PENDING_LOGOUT_COOKIE = "els_pending_logout";
+const PENDING_LOGOUT_PATH = "/api/logout/portal";
+const PENDING_LOGOUT_PURPOSE = "els:pending-portal-logout:v1";
+const pendingLogoutSchema = z.object({
+  sources: z.array(z.string().min(1)),
+  expiresAt: z.number().int(),
+  uncertain: z.boolean(),
+});
 
 const loginSchema = z.object({ passcode: z.string().min(1).max(200) });
 
@@ -55,6 +63,30 @@ export function registerAuth(
     sameSite: "strict" as const,
     path: "/",
   };
+
+  const pendingCookieOptions = { ...cookieOptions, path: PENDING_LOGOUT_PATH };
+  const pendingKey = createHmac("sha256", config.SESSION_SECRET).update(PENDING_LOGOUT_PURPOSE).digest();
+  type PendingLogout = z.infer<typeof pendingLogoutSchema>;
+  function sealPending(pending: PendingLogout): string {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", pendingKey, iv);
+    cipher.setAAD(Buffer.from(PENDING_LOGOUT_PURPOSE));
+    const ciphertext = Buffer.concat([cipher.update(JSON.stringify(pending), "utf8"), cipher.final()]);
+    return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString("base64url");
+  }
+  function openPending(value: string): PendingLogout {
+    if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error("pending logout");
+    const bytes = Buffer.from(value, "base64url");
+    const decipher = createDecipheriv("aes-256-gcm", pendingKey, bytes.subarray(0, 12));
+    decipher.setAAD(Buffer.from(PENDING_LOGOUT_PURPOSE));
+    decipher.setAuthTag(bytes.subarray(12, 28));
+    const plaintext = Buffer.concat([decipher.update(bytes.subarray(28)), decipher.final()]);
+    const pending = pendingLogoutSchema.parse(JSON.parse(plaintext.toString("utf8")));
+    // Authenticated but stale evidence is not success; retain its source IDs so
+    // revocation can still be attempted without accepting the token for auth.
+    if (pending.expiresAt <= now()) pending.uncertain = true;
+    return pending;
+  }
 
   type Session = { expires_at: number; source: string; source_hash: string | null; username: string | null };
   function currentSession(request: FastifyRequest): Session | null {
@@ -169,13 +201,25 @@ export function registerAuth(
       reply.header("Cache-Control", "no-store");
       const token = request.cookies[SESSION_COOKIE];
       const source = request.cookies[WACHPLAN_SESSION_COOKIE];
+      const prior = request.cookies[PENDING_LOGOUT_COOKIE];
+      let pending: PendingLogout = { sources: [], expiresAt: now() + 24 * 3_600_000, uncertain: false };
+      if (prior !== undefined) {
+        try {
+          pending = openPending(prior);
+        } catch {
+          // Never turn lost/expired revocation evidence into a successful logout.
+          pending.uncertain = true;
+        }
+      }
+      const sources = [...new Set([...pending.sources, ...(source ? [source] : [])])];
       if (token) deleteSession.run(tokenHash(token));
       // Auch andere ELS-Sitzungen derselben Wachplan-Sitzung sofort sperren.
-      if (source)
+      for (const source of sources)
         db.prepare("DELETE FROM sessions WHERE source = 'wachplan' AND source_hash = ?").run(tokenHash(source));
       reply.clearCookie(SESSION_COOKIE, cookieOptions);
       reply.clearCookie(WACHPLAN_SESSION_COOKIE, { ...cookieOptions, sameSite: "lax" });
-      if (source) {
+      const unresolved: string[] = [];
+      for (const source of sources) {
         try {
           const response = await fetchImpl(`${config.WACHPLAN_URL!.replace(/\/+$/, "")}/api/auth/logout`, {
             method: "POST",
@@ -185,11 +229,24 @@ export function registerAuth(
           });
           if (!response.ok) throw new Error("logout");
         } catch {
-          return reply.code(502).send({
-            message: "Lokal abgemeldet. Wachplan-Abmeldung konnte nicht bestätigt werden. Bitte erneut versuchen.",
-          });
+          unresolved.push(source);
         }
       }
+      if (unresolved.length || pending.uncertain) {
+        // No browser expiry: expired payloads must still reach us and fail closed,
+        // not silently disappear and yield a false 200. Keep invalid evidence unless
+        // new unresolved sources need saving; uncertainty then remains authenticated.
+        if (unresolved.length || prior === undefined)
+          reply.setCookie(
+            PENDING_LOGOUT_COOKIE,
+            sealPending({ ...pending, sources: unresolved }),
+            pendingCookieOptions,
+          );
+        return reply.code(502).send({
+          message: "Lokal abgemeldet. Wachplan-Abmeldung konnte nicht bestätigt werden. Bitte erneut versuchen.",
+        });
+      }
+      if (prior !== undefined) reply.clearCookie(PENDING_LOGOUT_COOKIE, pendingCookieOptions);
       return { ok: true };
     });
 

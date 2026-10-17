@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildApp } from "./app";
 import { readConfig } from "./config";
 import { openDatabase, type Db } from "./db";
@@ -6,6 +6,7 @@ import { hashPasscode } from "./passcode";
 
 const databases: Db[] = [];
 afterEach(() => {
+  vi.useRealTimers();
   for (const db of databases.splice(0)) db.close();
 });
 const env = {
@@ -24,6 +25,7 @@ async function setup() {
   let upstreamStatus = 200;
   let username = "wache";
   let logoutFails = false;
+  const revoked = new Set<string>();
   const calls: { url: string; method: string; headers: Headers; redirect?: RequestRedirect }[] = [];
   const fetchImpl = (async (url, init) => {
     calls.push({
@@ -32,12 +34,17 @@ async function setup() {
       headers: new Headers(init?.headers),
       redirect: init?.redirect,
     });
-    if (String(url).endsWith("/api/auth/logout")) return new Response(null, { status: logoutFails ? 503 : 200 });
+    const source = new Headers(init?.headers).get("cookie") ?? "";
+    if (String(url).endsWith("/api/auth/logout")) {
+      if (!logoutFails) revoked.add(source);
+      return new Response(null, { status: logoutFails ? 503 : 200 });
+    }
+    if (revoked.has(source)) return Response.json({ error: "Abgemeldet" }, { status: 401 });
     return Response.json(upstreamStatus === 200 ? { username } : { error: "Kein Zugriff" }, { status: upstreamStatus });
   }) as typeof fetch;
   const db = openDatabase(":memory:");
   databases.push(db);
-  const { app } = await buildApp(readConfig(env), db, { fetch: fetchImpl });
+  const { app } = await buildApp(readConfig(env), db, { fetch: fetchImpl, now: () => Date.now() });
   const source = { "wachplan.sid": "synthetic-source-session" };
   const login = await app.inject({ method: "POST", url: "/api/login/wachplan", cookies: source, payload: {} });
   const cookies = { ...source, els_session: login.cookies.find((c) => c.name === "els_session")!.value };
@@ -52,10 +59,18 @@ async function setup() {
     changeUser: () => {
       username = "andere";
     },
-    failLogout: () => {
-      logoutFails = true;
+    failLogout: (fails = true) => {
+      logoutFails = fails;
     },
   };
+}
+const pendingCookie = "els_pending_logout";
+// Apply Set-Cookie including deletions, as a browser does before the next request.
+function applyCookies(jar: Record<string, string>, response: { cookies: { name: string; value: string }[] }) {
+  for (const cookie of response.cookies) {
+    if (!cookie.value) delete jar[cookie.name];
+    else jar[cookie.name] = cookie.value;
+  }
 }
 describe("Gemeinsames Portal", () => {
   it("requires safe portal configuration", () => {
@@ -135,7 +150,68 @@ describe("Gemeinsames Portal", () => {
     const response = await app.inject({ method: "POST", url: "/api/logout/portal", cookies, payload: {} });
     expect(response.statusCode).toBe(502);
     expect(response.json().ok).not.toBe(true);
-    expect(response.cookies.map((c) => c.name).sort()).toEqual(["els_session", "wachplan.sid"]);
+    expect(response.cookies.map((c) => c.name).sort()).toEqual(["els_pending_logout", "els_session", "wachplan.sid"]);
     expect((await app.inject({ url: "/api/session", cookies })).statusCode).toBe(401);
+  });
+  it("retries the original source after browser cookie deletion and repeated failures, then revokes it", async () => {
+    const { app, cookies, calls, failLogout } = await setup();
+    const jar: Record<string, string> = { ...cookies };
+    failLogout();
+    for (let i = 0; i < 3; i++) {
+      const result = await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar });
+      expect(result.statusCode).toBe(502);
+      applyCookies(jar, result);
+      expect(Object.keys(jar)).toEqual([pendingCookie]);
+      expect(jar[pendingCookie]).not.toContain(cookies["wachplan.sid"]);
+    }
+    expect(calls.filter((c) => c.url.endsWith("/api/auth/logout"))).toHaveLength(3);
+    expect((await app.inject({ url: "/api/session", cookies: jar })).statusCode).toBe(401);
+    expect((await app.inject({ url: "/api/session", cookies })).statusCode).toBe(401);
+    failLogout(false);
+    const result = await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar });
+    expect(result.statusCode).toBe(200);
+    applyCookies(jar, result);
+    expect(jar).toEqual({});
+    expect(calls.filter((c) => c.url.endsWith("/api/auth/logout"))).toHaveLength(4);
+    expect((await app.inject({ method: "POST", url: "/api/login/wachplan", cookies })).statusCode).toBe(403);
+  });
+  it("retains both a pending source and a fresh current source across failures", async () => {
+    const { app, cookies, calls, failLogout } = await setup();
+    const jar: Record<string, string> = { ...cookies };
+    failLogout();
+    applyCookies(jar, await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar }));
+    jar["wachplan.sid"] = "fresh-synthetic-source";
+    const second = await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar });
+    expect(second.statusCode).toBe(502);
+    applyCookies(jar, second);
+    failLogout(false);
+    const result = await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar });
+    expect(result.statusCode).toBe(200);
+    expect(calls.filter((c) => c.url.endsWith("/api/auth/logout")).map((c) => c.headers.get("cookie"))).toEqual([
+      "wachplan.sid=synthetic-source-session",
+      "wachplan.sid=synthetic-source-session",
+      "wachplan.sid=fresh-synthetic-source",
+      "wachplan.sid=synthetic-source-session",
+      "wachplan.sid=fresh-synthetic-source",
+    ]);
+  });
+  it.each(["tampered", "expired"])("never reports success for %s retry state", async (kind) => {
+    const { app, cookies, failLogout } = await setup();
+    const jar: Record<string, string> = { ...cookies };
+    failLogout();
+    applyCookies(jar, await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar }));
+    if (kind === "tampered") jar[pendingCookie] = `invalid${jar[pendingCookie]}`;
+    else {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(Date.now() + 25 * 3_600_000);
+    }
+    failLogout(false);
+    for (let i = 0; i < 2; i++) {
+      const response = await app.inject({ method: "POST", url: "/api/logout/portal", cookies: jar });
+      expect(response.statusCode).toBe(502);
+      expect(response.json().ok).not.toBe(true);
+      applyCookies(jar, response);
+      expect(jar[pendingCookie]).toBeTruthy();
+    }
   });
 });

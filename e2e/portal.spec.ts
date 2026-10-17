@@ -76,6 +76,7 @@ test("Teilweise fehlgeschlagene Abmeldung wird angezeigt und sperrt das lokale E
   await login(page);
   await page.getByRole("link", { name: "ELS öffnen", exact: true }).click();
   await expect(page.getByTestId("sync-badge")).toHaveAttribute("data-state", "synced");
+  const originalSource = (await context.cookies()).find((c) => c.name === "wachplan.sid")!;
   await context.request.post("/__fixture/fail-logout");
   await page.getByRole("button", { name: "Abmelden", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("konnte nicht bestätigt werden");
@@ -83,6 +84,11 @@ test("Teilweise fehlgeschlagene Abmeldung wird angezeigt und sperrt das lokale E
   expect((await context.request.get("/api/session")).status()).toBe(401);
   const cookies = await context.cookies();
   expect(cookies.some((c) => c.name === "wachplan.sid" || c.name === "els_session")).toBe(false);
+  // The retry must revoke the original source, not merely succeed without cookies.
+  expect(await page.evaluate(async () => (await fetch("/api/logout/portal", { method: "POST" })).status)).toBe(200);
+  await context.addCookies([originalSource]);
+  expect(await page.evaluate(async () => (await fetch("/plan/api/auth/me")).status)).toBe(401);
+  expect(await page.evaluate(async () => (await fetch("/api/login/wachplan", { method: "POST" })).status)).toBe(403);
 });
 
 test("Tablet-Passcode erhält nur ELS-Zugang; Offline-Reload und Outbox bleiben erhalten", async ({ page, context }) => {

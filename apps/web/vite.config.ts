@@ -38,7 +38,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api\//, /^\/health$/],
+        // /plan/ gehört dem Wachplan, wenn beide unter einer Adresse laufen (docker-compose.wachplan.yml).
+        navigateFallbackDenylist: [/^\/api\//, /^\/health$/, /^\/plan(\/|$)/],
         runtimeCaching: [
           {
             // Kartenkacheln: einmal geladen, offline verfügbar.

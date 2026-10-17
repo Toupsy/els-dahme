@@ -12,6 +12,45 @@ import {
 } from "@els/domain";
 import type { Ledger } from "./ledger";
 
+/** Session-Cookie des Wachplan-Generators; unter derselben Adresse schickt der Browser es auch ans ELS. */
+export const WACHPLAN_SESSION_COOKIE = "wachplan.sid";
+
+export type WachplanUser = { ok: true; username: string } | { ok: false; status: 403 | 502; message: string };
+
+/**
+ * Anmeldung mit Wachplan-Konto: Der Wachplan prüft das weitergereichte
+ * Session-Cookie und ob die Person den angebundenen Plan öffnen darf.
+ */
+export async function wachplanUser(
+  options: Pick<WachplanOptions, "url" | "key">,
+  sessionCookie: string,
+  fetchImpl: typeof fetch,
+): Promise<WachplanUser> {
+  let response: Response;
+  try {
+    response = await fetchImpl(`${options.url.replace(/\/+$/, "")}/api/els/user`, {
+      headers: {
+        Authorization: `Bearer ${options.key}`,
+        Cookie: `${WACHPLAN_SESSION_COOKIE}=${encodeURIComponent(sessionCookie)}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    return { ok: false, status: 502, message: "Wachplan nicht erreichbar." };
+  }
+  const body = (await response.json().catch(() => null)) as { error?: unknown; username?: unknown } | null;
+  if (response.status === 401 || response.status === 403)
+    return {
+      ok: false,
+      status: 403,
+      message: typeof body?.error === "string" ? `Wachplan: ${body.error}.` : "Kein Zugriff.",
+    };
+  if (!response.ok || typeof body?.username !== "string")
+    return { ok: false, status: 502, message: `Wachplan antwortet mit ${response.status}.` };
+  return { ok: true, username: body.username };
+}
+
 /** Geräte-ID des Servers für Aktionen aus dem Wachplan-Abruf. */
 export const WACHPLAN_DEVICE_ID = "edac72a8-2ed3-4240-a0c4-d2511c7cee48";
 

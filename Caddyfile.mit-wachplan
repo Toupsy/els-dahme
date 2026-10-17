@@ -1,0 +1,13 @@
+# ELS und Wachplan unter einer Adresse (docker-compose.wachplan.yml):
+# /plan/ → Wachplan-Generator (Präfix wird entfernt), alles andere → ELS.
+{$PUBLIC_ORIGIN} {
+	encode zstd gzip
+	redir /plan /plan/ 308
+	handle_path /plan/* {
+		reverse_proxy wachplan:3000
+	}
+	handle {
+		reverse_proxy app:3000
+	}
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}

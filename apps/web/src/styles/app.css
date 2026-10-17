@@ -74,6 +74,14 @@ h3 {
 .spacer {
   flex: 1;
 }
+.topbar-link {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
 .demo-note {
   font-size: 0.8rem;
   padding: 3px 10px;

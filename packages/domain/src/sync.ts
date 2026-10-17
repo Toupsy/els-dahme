@@ -33,3 +33,9 @@ export type PullResponse = z.infer<typeof pullResponseSchema>;
 
 export const sessionInfoSchema = z.object({ expiresAt: z.string() });
 export type SessionInfo = z.infer<typeof sessionInfoSchema>;
+
+/** Vor der Anmeldung lesbar: Ist ein Wachplan angebunden, und geht die Anmeldung mit Wachplan-Konto? */
+export const loginOptionsSchema = z.object({
+  wachplan: z.object({ url: z.string(), login: z.boolean() }).nullable(),
+});
+export type LoginOptions = z.infer<typeof loginOptionsSchema>;

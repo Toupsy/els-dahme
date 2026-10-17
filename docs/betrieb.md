@@ -73,16 +73,45 @@ Der Server kann die Besetzung direkt beim Wachplan-Generator abholen. Dann muss 
 
 3. `docker compose up -d` startet den Server neu. Im Tab Personal steht danach „Besetzung kommt direkt aus dem Wachplan …“ mit der Zeit des letzten Abrufs.
 
-| Variable                    | Bedeutung                                       | Standard |
-| --------------------------- | ----------------------------------------------- | -------- |
-| `WACHPLAN_URL`              | Adresse des Wachplan-Generators                 | aus      |
-| `WACHPLAN_KEY`              | Schlüssel aus Einstellungen → ELS-Anbindung     | aus      |
-| `WACHPLAN_DAYS`             | Abgerufene Tage ab heute (2 = heute und morgen) | 2        |
-| `WACHPLAN_INTERVAL_SECONDS` | Abstand der Abrufe                              | 60       |
+| Variable                    | Bedeutung                                                                               | Standard |
+| --------------------------- | --------------------------------------------------------------------------------------- | -------- |
+| `WACHPLAN_URL`              | Adresse des Wachplan-Generators                                                         | aus      |
+| `WACHPLAN_KEY`              | Schlüssel aus Einstellungen → ELS-Anbindung                                             | aus      |
+| `WACHPLAN_DAYS`             | Abgerufene Tage ab heute (2 = heute und morgen)                                         | 2        |
+| `WACHPLAN_INTERVAL_SECONDS` | Abstand der Abrufe                                                                      | 60       |
+| `WACHPLAN_PUBLIC_URL`       | Adresse für den Browser; ein Pfad wie `/plan/` erlaubt die Anmeldung mit Wachplan-Konto | aus      |
 
 Über das Internet nur mit `https://`. `http://` nimmt der Server nur für Adressen im eigenen Netz an (Docker-Dienstname, `localhost`, private IP). Erzeugt man im Wachplan einen neuen Schlüssel, ist der alte sofort ungültig. Der Personal-Tab meldet das dann, bis der neue in `.env` steht.
 
 Für heute und die abgerufenen Tage gilt der Wachplan. Was die Wachführung im ELS ändert (Umsetzen, Abwesend), bleibt erhalten. Ein Tag, der im Wachplan noch leer ist, wird nicht angefasst.
+
+## Ein Programm: Wachplan unter derselben Adresse
+
+Mit `docker-compose.wachplan.yml` laufen ELS und Wachplan-Generator unter einer Adresse: das ELS unter `https://<domain>/`, der Wachplan unter `https://<domain>/plan/`. Caddy verteilt nach Pfad (`Caddyfile.mit-wachplan`).
+
+- Planer melden sich im ELS mit ihrem Wachplan-Konto an („Mit Wachplan-Konto anmelden“), nachdem sie im Wachplan angemeldet sind. Zugang hat, wer den angebundenen Plan öffnen darf (Eigentümer, geteilt zum Bearbeiten oder Ansehen). In der Kopfzeile steht dann der Link „Wachplan“, im Wachplan der Link „ELS“.
+- Tablets melden sich weiter mit dem Passcode an und sehen nur das ELS.
+
+Einrichten:
+
+1. `cp wachplan.env.example wachplan.env` und darin `MASTER_SECRET`, `SALT`, `SESSION_SECRET` sowie das erste Admin-Konto eintragen.
+2. In `.env` die Zeile `COMPOSE_FILE=docker-compose.yml:docker-compose.wachplan.yml` ergänzen. Danach gilt jedes `docker compose …` für beide.
+3. `docker compose up -d --build`, dann im Wachplan (`/plan/`) anmelden, den Plan anlegen und unter Einstellungen → ELS-Anbindung einen Schlüssel erzeugen.
+4. Den Schlüssel als `WACHPLAN_KEY` in `.env` eintragen und `docker compose up -d` ausführen. `WACHPLAN_URL` und `WACHPLAN_PUBLIC_URL` setzt die Compose-Datei selbst.
+
+Bis der Schlüssel eingetragen ist, startet das ELS ohne Anbindung und schreibt einen Hinweis ins Log.
+
+Das Image kommt aus `ghcr.io/toupsy/wachplan-generator:main`. Ein anderes Image (z. B. selbst gebaut mit `docker build -t wachplan-generator:local .` im Wachplan-Repository) setzt `WACHPLAN_IMAGE` in `.env`.
+
+**Bestehenden Wachplan umziehen:** In `wachplan.env` dieselben `MASTER_SECRET` und `SALT` wie bisher eintragen, sonst sind die Pläne nicht lesbar. Dann die Datei `wachplan.db` aus dem alten Datenverzeichnis in das Volume `wachplan_data` kopieren, bei gestopptem Wachplan:
+
+```bash
+docker compose stop wachplan
+docker compose cp ./wachplan.db wachplan:/app/data/wachplan.db
+docker compose start wachplan
+```
+
+Sicherung des Wachplans wie bisher über dessen Datenverzeichnis (`/app/data` im Container `wachplan`).
 
 ## Sicherung
 

@@ -38,6 +38,15 @@ const envSchema = z
     WACHPLAN_KEY: z.preprocess(emptyToUndefined, z.string().min(20, "WACHPLAN_KEY ist zu kurz").optional()),
     WACHPLAN_DAYS: z.coerce.number().int().min(1).max(14).default(2),
     WACHPLAN_INTERVAL_SECONDS: z.coerce.number().int().min(15).max(3600).default(60),
+    /** Adresse des Wachplans für den Browser. Ein Pfad wie /plan/ (gleiche Adresse) erlaubt die Anmeldung mit Wachplan-Konto. */
+    WACHPLAN_PUBLIC_URL: z.preprocess(
+      emptyToUndefined,
+      z
+        .string()
+        .max(200)
+        .regex(/^(\/|https?:\/\/)/, "Pfad wie /plan/ oder Adresse mit https://")
+        .optional(),
+    ),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === "production" && !env.PUBLIC_ORIGIN.startsWith("https://"))
@@ -46,12 +55,9 @@ const envSchema = z
         path: ["PUBLIC_ORIGIN"],
         message: "Im Live-Betrieb ist HTTPS erforderlich",
       });
-    if (!env.WACHPLAN_URL !== !env.WACHPLAN_KEY)
-      ctx.addIssue({
-        code: "custom",
-        path: [env.WACHPLAN_URL ? "WACHPLAN_KEY" : "WACHPLAN_URL"],
-        message: "WACHPLAN_URL und WACHPLAN_KEY nur zusammen setzen",
-      });
+    // Adresse ohne Schlüssel ist erlaubt (Verbund vor dem ersten Schlüssel), die Anbindung bleibt dann aus.
+    if (env.WACHPLAN_KEY && !env.WACHPLAN_URL)
+      ctx.addIssue({ code: "custom", path: ["WACHPLAN_URL"], message: "WACHPLAN_KEY braucht WACHPLAN_URL" });
     // Der Schlüssel darf nicht unverschlüsselt durchs Internet; im eigenen Netz geht auch HTTP.
     if (env.NODE_ENV === "production" && env.WACHPLAN_URL?.startsWith("http://") && !isInternalHost(env.WACHPLAN_URL))
       ctx.addIssue({

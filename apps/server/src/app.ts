@@ -52,6 +52,10 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
           { now: options.now ?? Date.now, fetch: options.fetch ?? fetch, log: (message) => app.log.warn(message) },
         )
       : null;
+  if (config.WACHPLAN_URL && !config.WACHPLAN_KEY)
+    app.log.warn(
+      "WACHPLAN_KEY fehlt, die Wachplan-Anbindung ist aus. Schlüssel im Wachplan unter Einstellungen → ELS-Anbindung erzeugen.",
+    );
   app.addHook("onClose", async () => wachplan?.stop());
 
   app.addHook("onSend", async (_request, reply) => {
@@ -67,7 +71,7 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
   });
 
   await app.register(cookie);
-  registerAuth(app, config, db, options.now);
+  registerAuth(app, config, db, options.now, options.fetch);
 
   app.get("/health", async () => ({ ok: true }));
 

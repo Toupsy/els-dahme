@@ -89,6 +89,8 @@ const ALIASES = {
   code: ["code", "kennung", "rufname"],
   position: ["position", "funktion", "aufgabe"],
   person: ["person", "name", "kraft"],
+  /** Wachplan-Generator: „krank“ steht hier, nicht in der Funktion. */
+  slot: ["rolle im slot"],
 } as const;
 export type Columns = Record<keyof typeof ALIASES, number>;
 
@@ -187,6 +189,7 @@ export function buildRoster(rows: readonly (readonly string[])[], year: number):
     const name = cell(row, columns.person);
     const role = positionRole(cell(row, columns.position));
     if (role === "CLOSED" || (!name && !cell(row, columns.position))) return;
+    if (personKey(cell(row, columns.slot)) === "krank") return;
     if (!date) return void warnings.add(`Zeile ${line}: Tag „${cell(row, columns.day)}“ nicht lesbar – übersprungen.`);
     if (!name) return;
     if (!role)

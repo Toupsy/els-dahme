@@ -96,6 +96,10 @@ Der Passcode wird nur auf dem Server geprüft. Er steht als scrypt-Hash in `PASS
 
 Nach dem Login gibt es ein zufälliges Token im Cookie `els_session` (httpOnly, Secure, SameSite=Strict); in SQLite steht nur dessen HMAC. Die Sitzung gilt `SESSION_TTL_HOURS` (Standard 24 h) und ist an den aktuellen Passcode gebunden. Fehlversuche begrenzt der Server je IP (`LOGIN_MAX_FAILURES` je `LOGIN_WINDOW_MINUTES`).
 
+Mit Wachplan-Konto (nur wenn der Wachplan unter derselben Adresse läuft, `WACHPLAN_PUBLIC_URL` ist ein Pfad): Der Browser schickt das Wachplan-Cookie `wachplan.sid` mit. `POST /api/login/wachplan` reicht nur dieses Cookie zusammen mit dem ELS-Schlüssel an `GET /api/els/user` des Wachplans weiter. Antwortet der Wachplan mit 200, weil die Person den angebundenen Plan öffnen darf, entsteht dieselbe Sitzung wie beim Passcode. Fehlversuche zählen in dieselbe Begrenzung. `GET /api/login/options` sagt vor der Anmeldung, ob es diesen Weg gibt. Den Link „Wachplan“ in der Kopfzeile sieht nur, wer so angemeldet ist.
+
+Der Service Worker leitet `/plan/` nicht auf die App um (`navigateFallbackDenylist`), damit der Wachplan dort erreichbar bleibt.
+
 Ohne gültige Sitzung liefern alle `/api/*` 401. Das Gerät arbeitet offline weiter; bei der nächsten Verbindung fragt die App erneut nach dem Passcode und sendet danach die Outbox.
 
 ## Datenbank

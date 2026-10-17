@@ -22,12 +22,18 @@ export function App() {
   const route = useRoute();
   const runtime = useRuntime();
   const Page = PAGES[route.tab];
+  const wachplan = runtime.wachplanLink?.();
   return (
     <div className="shell">
       <header className="topbar">
         <span className="brand">ELS Dahme</span>
         {runtime.mode === "demo" && <span className="demo-note">Demo – Daten nur lokal</span>}
         <span className="spacer" />
+        {wachplan && (
+          <a className="topbar-link" href={wachplan}>
+            Wachplan
+          </a>
+        )}
         <SyncBadge />
       </header>
       <nav className="tabs" aria-label="Bereiche">

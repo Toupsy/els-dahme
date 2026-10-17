@@ -8,6 +8,7 @@ test-results/
 .env
 .env.*
 !.env.example
+wachplan.env
 *.db
 *.db-*
 data/

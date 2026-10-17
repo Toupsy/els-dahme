@@ -26,6 +26,8 @@ export interface Runtime {
   resetDemo?(): Promise<void>;
   /** Nur Demo: Beispieldatei für den Wachplan-Import. */
   sampleRosterCsv?(): string;
+  /** Nur Live und nur nach Anmeldung mit Wachplan-Konto: Adresse des Wachplans für die Kopfzeile. */
+  wachplanLink?(): string | undefined;
   /** Nur Live: Stand der direkten Wachplan-Anbindung; `sync` ruft sofort ab. */
   wachplan?: { status(): Promise<WachplanStatus>; sync(): Promise<WachplanStatus> };
 }

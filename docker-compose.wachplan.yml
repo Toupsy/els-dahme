@@ -1,0 +1,24 @@
+# Wachplan-Generator unter derselben Adresse wie das ELS: https://<domain>/plan/
+# Einrichtung: docs/betrieb.md, Abschnitt „Ein Programm: Wachplan unter derselben Adresse“.
+#   docker compose -f docker-compose.yml -f docker-compose.wachplan.yml up -d
+# Dauerhaft: COMPOSE_FILE=docker-compose.yml:docker-compose.wachplan.yml in .env
+services:
+  wachplan:
+    image: ${WACHPLAN_IMAGE:-ghcr.io/toupsy/wachplan-generator:main}
+    env_file: wachplan.env
+    environment:
+      ELS_URL: /
+    restart: unless-stopped
+    volumes:
+      - wachplan_data:/app/data
+    security_opt:
+      - no-new-privileges:true
+  app:
+    environment:
+      WACHPLAN_URL: http://wachplan:3000
+      WACHPLAN_PUBLIC_URL: /plan/
+  proxy:
+    volumes:
+      - ./Caddyfile.mit-wachplan:/etc/caddy/Caddyfile:ro
+volumes:
+  wachplan_data:

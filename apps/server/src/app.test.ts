@@ -330,12 +330,89 @@ describe("Wachplan-Anbindung", () => {
   });
 
   it("prüft die Einstellungen beim Start", () => {
-    expect(() => config({ WACHPLAN_URL: "https://wachplan.example.test" })).toThrow(/nur zusammen/);
-    expect(() => config({ WACHPLAN_KEY: "k".repeat(43) })).toThrow(/nur zusammen/);
+    // Adresse ohne Schlüssel: Verbund vor dem ersten Schlüssel, Anbindung bleibt aus.
+    expect(() => config({ WACHPLAN_URL: "https://wachplan.example.test" })).not.toThrow();
+    expect(() => config({ WACHPLAN_KEY: "k".repeat(43) })).toThrow(/braucht WACHPLAN_URL/);
+    expect(() => config({ WACHPLAN_PUBLIC_URL: "plan" })).toThrow(/WACHPLAN_PUBLIC_URL/);
     expect(() => config({ WACHPLAN_URL: "", WACHPLAN_KEY: "" })).not.toThrow();
     const production = { NODE_ENV: "production", WACHPLAN_KEY: "k".repeat(43) };
     expect(() => config({ ...production, WACHPLAN_URL: "http://wachplan.example.de" })).toThrow(/HTTPS/);
     expect(() => config({ ...production, WACHPLAN_URL: "http://wachplan:3000" })).not.toThrow();
     expect(() => config({ ...production, WACHPLAN_URL: "http://192.168.1.20:3000" })).not.toThrow();
+  });
+});
+
+describe("Anmeldung mit Wachplan-Konto", () => {
+  const ENV = { WACHPLAN_URL: "http://wachplan:3000", WACHPLAN_KEY: "k".repeat(43), WACHPLAN_PUBLIC_URL: "/plan/" };
+  /** Signiertes express-session-Cookie mit Zeichen, die kodiert werden müssen. */
+  const WP_COOKIE = "s:abc+def/ghi.sig";
+
+  async function sso(reply: () => Response, extra: Record<string, string> = {}) {
+    const calls: { url: string; headers: Headers }[] = [];
+    const fetchImpl = (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), headers: new Headers(init?.headers) });
+      return reply();
+    }) as typeof fetch;
+    const db = openDatabase(":memory:");
+    open.push(db);
+    return { ...(await buildApp(config({ ...ENV, ...extra }), db, { fetch: fetchImpl })), calls };
+  }
+  const viaWachplan = (app: Awaited<ReturnType<typeof sso>>["app"], cookies: Record<string, string> = {}) =>
+    app.inject({ method: "POST", url: "/api/login/wachplan", payload: {}, cookies });
+
+  it("verrät vor der Anmeldung nur, ob und wo der Wachplan angebunden ist", async () => {
+    const { app } = await sso(() => Response.json({}));
+    expect((await app.inject({ method: "GET", url: "/api/login/options" })).json()).toEqual({
+      wachplan: { url: "/plan/", login: true },
+    });
+    const plain = await setup();
+    expect((await plain.app.inject({ method: "GET", url: "/api/login/options" })).json()).toEqual({ wachplan: null });
+    // Unter einer anderen Adresse sieht das ELS das Cookie nicht: nur Link, keine Anmeldung.
+    const elsewhere = await sso(() => Response.json({}), { WACHPLAN_PUBLIC_URL: "https://wachplan.example.test" });
+    expect((await elsewhere.app.inject({ method: "GET", url: "/api/login/options" })).json()).toEqual({
+      wachplan: { url: "https://wachplan.example.test", login: false },
+    });
+    expect((await viaWachplan(elsewhere.app, { "wachplan.sid": WP_COOKIE })).statusCode).toBe(404);
+  });
+
+  it("reicht nur das Wachplan-Cookie weiter und öffnet bei Zugriff eine Sitzung", async () => {
+    const { app, calls } = await sso(() => Response.json({ username: "wf", role: "owner" }));
+    expect((await viaWachplan(app)).statusCode).toBe(401);
+    expect(calls).toEqual([]);
+    const response = await viaWachplan(app, { "wachplan.sid": WP_COOKIE, els_fremd: "x" });
+    expect(response.statusCode).toBe(200);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.url).toBe("http://wachplan:3000/api/els/user");
+    expect(calls[0]!.headers.get("authorization")).toBe(`Bearer ${"k".repeat(43)}`);
+    expect(calls[0]!.headers.get("cookie")).toBe(`wachplan.sid=${encodeURIComponent(WP_COOKIE)}`);
+    const cookies = cookieOf(response);
+    expect((await app.inject({ method: "GET", url: "/api/sync/pull", cookies })).statusCode).toBe(200);
+  });
+
+  it("ohne Zugriff, mit abgelaufener Wachplan-Sitzung oder ohne Wachplan gibt es keine Sitzung", async () => {
+    let reply = () => Response.json({ error: "Kein Zugriff auf den angebundenen Plan" }, { status: 403 });
+    const { app } = await sso(() => reply());
+    let response = await viaWachplan(app, { "wachplan.sid": WP_COOKIE });
+    expect(response.statusCode).toBe(403);
+    expect(response.json().message).toBe("Wachplan: Kein Zugriff auf den angebundenen Plan.");
+    expect(cookieOf(response)).toEqual({});
+    reply = () => Response.json({ error: "Nicht im Wachplan angemeldet" }, { status: 401 });
+    response = await viaWachplan(app, { "wachplan.sid": WP_COOKIE });
+    expect([response.statusCode, response.json().message]).toEqual([403, "Wachplan: Nicht im Wachplan angemeldet."]);
+    reply = () => {
+      throw new TypeError("fetch failed");
+    };
+    response = await viaWachplan(app, { "wachplan.sid": WP_COOKIE });
+    expect([response.statusCode, response.json().message]).toEqual([502, "Wachplan nicht erreichbar."]);
+  });
+
+  it("Fehlversuche zählen in dieselbe Begrenzung wie der Passcode", async () => {
+    const { app } = await sso(() => Response.json({ error: "Kein Zugriff" }, { status: 403 }), {
+      LOGIN_MAX_FAILURES: "2",
+    });
+    expect((await viaWachplan(app, { "wachplan.sid": WP_COOKIE })).statusCode).toBe(403);
+    expect((await viaWachplan(app, { "wachplan.sid": WP_COOKIE })).statusCode).toBe(403);
+    expect((await viaWachplan(app, { "wachplan.sid": WP_COOKIE })).statusCode).toBe(429);
+    expect((await login(app)).statusCode).toBe(429);
   });
 });

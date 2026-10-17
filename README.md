@@ -19,6 +19,8 @@ docker compose up -d --build
 
 Caddy holt das HTTPS-Zertifikat automatisch. Betrieb, Passcode-Wechsel und Sicherung: [docs/betrieb.md](docs/betrieb.md).
 
+**Mit dem Wachplan-Generator als ein Programm:** `docker-compose.wachplan.yml` stellt den Wachplan unter `/plan/` derselben Adresse bereit. Planer melden sich dann im ELS mit ihrem Wachplan-Konto an, Tablets weiter mit dem Passcode. Einrichtung: [docs/betrieb.md](docs/betrieb.md#ein-programm-wachplan-unter-derselben-adresse).
+
 ## Bedienung in Kürze
 
 - **Lage:** Turm, Boot oder Einsatz antippen; die passenden Knöpfe öffnen sich als Popup über der Karte. Unter der Karte stehen das Funktagebuch des Tages (mit Eingabe) und daneben ein Notizblock, der nur auf dem jeweiligen Gerät gespeichert wird. Die Trennlinie lässt sich ziehen; Doppelklick setzt die Höhe zurück. „Einsatz anlegen“ und dann den Ort antippen (oder lange auf die Karte drücken). „Norden oben“ schaltet die Ausrichtung um; Standard ist Seeseite oben.
